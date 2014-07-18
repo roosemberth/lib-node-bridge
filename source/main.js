@@ -5,9 +5,22 @@
 var server = require('./server.js');
 var app = require('./app.js');
 var config = require('./utils/config.js');
-//var passport = require('passport');
+
+var instance = null;
 
 var PryvBridge = function (name) {
+  if (instance) {
+    return instance;
+  }
+
+  if (this instanceof PryvBridge) {
+    instance = this;
+  } else {
+    return new PryvBridge(name);
+  }
+
+  this.passport = require('passport');;
+
   this.config = config;
 
   config.set('service:name', name);
@@ -43,9 +56,10 @@ PryvBridge.prototype.getUser = function (token) {
 };
 
 PryvBridge.prototype.addServiceAuthStrategy = function (passportStrategy) {
-  //passport.use(passportStrategy);
-  //app.use(passport.initialize());
-  //app.use(passport.session());
+  this.passport.use(passportStrategy);
+  app.use(this.passport.initialize());
+  app.use(this.passport.session());
+  console.log(this.passport);
 };
 
 PryvBridge.prototype.addServiceAuthRoutes = function (authRoutes) {
