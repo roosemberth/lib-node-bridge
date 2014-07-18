@@ -1,0 +1,14 @@
+
+<div class="container">
+    <div class="jumbotron">
+        <h1>Connected accounts</h1>
+        <div id="overview">
+            <span ng-hide="!!accounts.length">
+                You have currently no connected {{name}} accounts.
+                 <p>
+                     <button type="button" class="btn btn-default" ng-click="addAccount()">Connect Now!</button>
+                 </p>
+            </span>
+        </div>
+    </div>
+</div>
