@@ -19,13 +19,13 @@ var PryvBridge = function (name) {
     return new PryvBridge(name);
   }
 
-  this.passport = require('passport');;
+  this.passport = require('passport');
 
   this.config = config;
 
   config.set('service:name', name);
 
-  this.db = require('./provider/UserProvider.js');
+  this.db = require('./provider/UserProvider.js')();
 };
 
 PryvBridge.prototype.start = function () {
@@ -59,7 +59,6 @@ PryvBridge.prototype.addServiceAuthStrategy = function (passportStrategy) {
   this.passport.use(passportStrategy);
   app.use(this.passport.initialize());
   app.use(this.passport.session());
-  console.log(this.passport);
 };
 
 PryvBridge.prototype.addServiceAuthRoutes = function (authRoutes) {

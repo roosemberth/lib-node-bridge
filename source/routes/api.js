@@ -15,18 +15,25 @@ var up = require('../provider/UserProvider.js')();
 /**
  * Returns the data for the status overview
  */
-router.get('/api/overview', function(req, res) {
-  console.log('/api/overview', req.session);
-
+router.get('/api/overview', function (req, res) {
   if (!req.session.pryv || (req.session.pryv && !req.session.pryv.user)) {
-    res.send(401);
+    return res.send(401);
   } else {
-    up.getServices(req.session.pryv.user, function (error, service) {
+    up.getServiceAccounts(req.session.pryv.user, function (error, accounts) {
+      console.log('/api/overview\n', 'ERROR:\t', error, '\nSERVICE:\t', accounts);
       if (error) {
-        res.redirect(401, '/');
+        return res.redirect(401, '/');
       } else {
-        service.name = config.get('service:name');
-        res.send(service);
+        var service = {
+          name: config.get('service:name'),
+          accounts: []
+        };
+        for (var key in accounts) {
+          if (accounts.hasOwnProperty(key)) {
+            service.accounts.push(accounts[key]);
+          }
+        }
+        return res.send(service);
       }
     });
   }
@@ -35,7 +42,7 @@ router.get('/api/overview', function(req, res) {
 /**
  * Returns the data for a specific account configuration
  */
-router.get('/settings/config/:account', function(req, res) {
+router.get('/settings/config/:account', function (req, res) {
   var account = req.params.account;
   if (!req.session.pryv || (req.session.pryv && !req.session.pryv.user)) {
     res.send(401);
@@ -57,7 +64,7 @@ router.get('/settings/config/:account', function(req, res) {
 /**
  * Sets the data for a specific account configuration
  */
-router.post('/settings/config/:account', function(req, res) {
+router.post('/settings/config/:account', function (req, res) {
   var account = req.params.account;
   if (!req.session.pryv || (req.session.pryv && !req.session.pryv.user)) {
     res.send(401);
@@ -95,14 +102,14 @@ router.post('/login/pryv', function (req, res) {
   var username = req.param('username');
 
   ip.verifyPryv(username, token, function (success) {
-    if(success) {
+    if (success) {
       req.session.pryv = {
         user: username,
         token: token
       };
       up.getUserOrInit(username, token, function (error, record) {
         console.log(error, record);
-        if(error) {
+        if (error) {
           res.send(500);
         } else {
           res.send(200);

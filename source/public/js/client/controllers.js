@@ -89,7 +89,7 @@ angular.module('pryvBridge.controllers', []).
       success(function (data, status, headers, config) {
         console.log('OverviewCtrl.success', data, status, headers, config);
         $scope.name = data.name;
-        $scope.acounnts = data.accounts;
+        $scope.accounts = data.accounts;
       }).
       error(function (data, status, headers, config) {
         console.log('OverviewCtrl.error', data, status, headers, config);
