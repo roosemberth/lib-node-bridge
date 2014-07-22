@@ -176,6 +176,28 @@ UserProvider.prototype.getServiceUser = function (serviceUserId, callback) {
       return callback(error, record);
     });
   });
+
+
+};
+
+/**
+ * Iterates over all documents and execute fn for each tuple
+ * (pryvAccount, serviceAccount)
+ * @param fn the execute function (pryvAccount, serviceAcount)
+ */
+UserProvider.prototype.forEachUser = function (fn) {
+  userDb.collection(config.get('mongo:serviceUserDb'), function (error, collection) {
+    var cursor = collection.find();
+    cursor.each(function(err, item) {
+      if(item !== null) {
+        var pryv = item.pryv;
+        var service = item.service;
+        for (var i = 0; i < service.accounts.length; ++i) {
+          fn(pryv, service.accounts[i]);
+        }
+      }
+    });
+  });
 };
 
 

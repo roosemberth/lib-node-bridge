@@ -5,6 +5,7 @@
 var server = require('./server.js');
 var app = require('./app.js');
 var config = require('./utils/config.js');
+var CronJob = require('cron').CronJob;
 
 var instance = null;
 
@@ -30,6 +31,7 @@ var PryvBridge = function (name) {
 
 PryvBridge.prototype.start = function () {
   server();
+  //this.job.start();
 };
 
 
@@ -65,6 +67,23 @@ PryvBridge.prototype.addServiceAuthRoutes = function (authRoutes) {
   app.use('/', authRoutes);
 };
 
+
+/**
+ * Mapper function setting with its scheduling
+ * @param schedule  A cron schedule
+ * @param mapper    A mapping function (pryvAccount, serviceAccount)
+ */
+PryvBridge.prototype.setMapper = function (schedule, mapper) {
+  var doStuff = function () {
+    this.db.forEachUser(mapper);
+  };
+  this.job = new CronJob({
+    cronTime: schedule,
+    onTick: doStuff,
+    start: false,
+    context: this
+  });
+};
 
 
 module.exports = PryvBridge;
