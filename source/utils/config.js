@@ -37,6 +37,14 @@ if (configFile) {
 
 // Set default values
 nconf.defaults({
+  'mongo': {
+    'host': '127.0.0.1',
+    'port': 27017,
+    'database': 'test-bridge',
+    'sessionDb': 'test-bridge-session',
+    'userDb': 'test-bridge-user',
+    'serviceUserDb': 'test-bridge-service-user'
+  },
   'http': {
     'port': '3000',
     'certsPathAndKey': 'source/cert/rec.la', // set to false for http mode
