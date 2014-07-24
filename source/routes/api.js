@@ -107,10 +107,15 @@ router.post('/login/pryv', function (req, res) {
         user: username,
         token: token
       };
-      up.getUserOrInit(username, token, function (error, record) {
-        console.log(error, record);
+      up.getUser(username, function (error, user) {
         if (error) {
-          res.send(500);
+          up.insertUser(username, {user: username, token: token}, null, null, function (error, user) {
+            if (error) {
+              res.send(500);
+            } else {
+              res.send(200);
+            }
+          });
         } else {
           res.send(200);
         }

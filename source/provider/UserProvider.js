@@ -240,36 +240,53 @@ UserProvider.prototype.setServiceSettings = function (pryvUsername, serviceSetti
  * @param callback
  */
 UserProvider.prototype.getServiceAccounts = function (pryvUsername, callback) {
+  console.warn('getServiceAccounts1', pryvUsername);
   if (typeof(callback) !== 'function') {
     return;
   }
+  console.warn('getServiceAccounts2', pryvUsername);
   if (!pryvUsername) {
     return callback('No username supplied', null);
   }
+  console.warn('getServiceAccounts3', pryvUsername);
   userDb.collection(config.get('mongo:userDb'), function (err, collection) {
+    console.warn('getServiceAccounts4', pryvUsername);
     collection.findOne({username: pryvUsername}, function (error, record) {
+      console.warn(error, record);
       if (error) {
+        console.warn('getServiceAccounts5', pryvUsername);
         return callback(error, null);
       } else if (record && record.service) {
+        console.warn('getServiceAccounts6', pryvUsername);
         return callback(null, record.service.accounts);
+      } else {
+        return callback(null, []);
       }
     });
   });
 };
 
 UserProvider.prototype.getServiceAccount = function (pryvUsername, accountId, callback) {
+  console.warn('getServiceAccount1', pryvUsername, accountId);
   if (typeof(callback) !== 'function') {
     return;
   }
+  console.warn('getServiceAccount2', pryvUsername, accountId);
   if (!pryvUsername || !accountId) {
     return callback('No pryvUsername or accountId supplied', null);
   }
+  console.warn('getServiceAccount3', pryvUsername, accountId);
   this.getServiceAccounts(pryvUsername, function (error, accounts) {
+    console.warn('getServiceAccount4', pryvUsername, accountId);
     for( var i = 0; i < accounts.length; ++i) {
       if (accounts[i].aid === accountId) {
+        console.warn('getServiceAccount5', pryvUsername, accountId);
+
         return callback(null, accounts[i]);
       }
     }
+    console.warn('getServiceAccount6', pryvUsername, accountId);
+
     return callback('Item not found', null);
   });
 };
@@ -365,13 +382,11 @@ UserProvider.prototype.removeServiceAccount = function (pryvUsername, accountId,
           foundId = i;
         }
       }
-
       if (service.accounts[foundId].aid === accountId) {
         service.accounts = accounts;
       } else {
         return callback('Account to remove not found', null);
       }
-
       return that.setService(pryvUsername, service, function (err) {
         if (err) {
           return callback('Internal error', null);
