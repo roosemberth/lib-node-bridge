@@ -20,7 +20,6 @@ router.get('/api/overview', function (req, res) {
     return res.send(401);
   } else {
     up.getServiceAccounts(req.session.pryv.user, function (error, accounts) {
-      console.log('/api/overview\n', 'ERROR:\t', error, '\nSERVICE:\t', accounts);
       if (error) {
         return res.redirect(401, '/');
       } else {
@@ -108,9 +107,6 @@ router.post('/api/config/:account', function (req, res) {
  * Accepts an authorization from Pryv and register in DB
  */
 router.post('/login/pryv', function (req, res) {
-  console.log('/login/pryv', req.session);
-
-
   var token = req.param('token');
   var username = req.param('username');
 

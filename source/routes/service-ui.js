@@ -8,7 +8,6 @@ var controllerPath = path.join(config.get('ui:pathprefix'), config.get('ui:js:co
 
 
 router.get('/js/client/module.js', function(req, res) {
-  console.log(controllerPath);
   res.sendfile(controllerPath);
 });
 
