@@ -5,10 +5,19 @@
         <div id="overview">
             <span ng-hide="!!accounts.length">
                 You have currently no connected {{name}} accounts.
-                 <p>
-                     <button type="button" class="btn btn-default" ng-click="addAccount()">Connect Now!</button>
-                 </p>
             </span>
+            <div ng-hide="!accounts.length" ng-repeat="acc in accounts">
+                {{acc.aid}}
+                {{acc.enabled}}
+                {{acc.critical}}
+                {{acc.message}}
+                <button type="button" class="btn btn-default" ng-click="editAccount(acc.aid)">Connect Now!</button>
+            </div>
+
+
+            <p>
+                <button type="button" class="btn btn-default" ng-click="addAccount()">Connect Now!</button>
+            </p>
         </div>
     </div>
 </div>

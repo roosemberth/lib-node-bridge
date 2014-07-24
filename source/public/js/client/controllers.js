@@ -7,18 +7,6 @@
 
 angular.module('pryvBridge.controllers', []).
   controller('AppCtrl', function ($scope, $http) {
-  /*
-    $http({
-      method: 'GET',
-      url: '/api/name'
-    }).
-    success(function (data, status, headers, config) {
-      $scope.name = data.name;
-    }).
-    error(function (data, status, headers, config) {
-      $scope.name = 'Error!';
-    });
-  */
 
   }).
   controller('SigninPryvCtrl', ['$scope', '$rootScope', '$http', '$location',
@@ -100,6 +88,13 @@ angular.module('pryvBridge.controllers', []).
       $scope.addAccount = function() {
         _.defer(function ($rs, $l) {
           $l.path('/signin-service');
+          $rs.$apply();
+        }, $rootScope, $location);
+      };
+
+      $scope.editAccount = function(aid) {
+        _.defer(function ($rs, $l) {
+          $l.path('/configure/' + aid);
           $rs.$apply();
         }, $rootScope, $location);
       };

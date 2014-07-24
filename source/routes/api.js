@@ -28,10 +28,14 @@ router.get('/api/overview', function (req, res) {
           name: config.get('service:name'),
           accounts: []
         };
-        for (var key in accounts) {
-          if (accounts.hasOwnProperty(key)) {
-            service.accounts.push(accounts[key]);
-          }
+        for( var i = 0, l = accounts.length; i < l; ++i) {
+          service.accounts.push({
+            aid: accounts[i].aid,
+            enabled: accounts[i].settings.enabled,
+            critical: accounts[i].settings.critical,
+            message: accounts[i].settings.message,
+            profile: accounts[i].settings.profile
+          });
         }
         return res.send(service);
       }
@@ -42,20 +46,29 @@ router.get('/api/overview', function (req, res) {
 /**
  * Returns the data for a specific account configuration
  */
-router.get('/settings/config/:account', function (req, res) {
+router.get('/api/config/:account', function (req, res) {
   var account = req.params.account;
   if (!req.session.pryv || (req.session.pryv && !req.session.pryv.user)) {
     res.send(401);
   } else if (!account) {
     res.send(400);
   } else {
-    up.getServices(req.session.pryv.user, function (error, service) {
+    up.getServiceAccount(req.session.pryv.user, account, function (error, account) {
       if (error) {
         res.send(401);
-      } else if (!service[account]) {
+      } else if (!account) {
         res.send(404);
       } else {
-        res.send(service[account]);
+        var data = {
+          aid: account.aid,
+          mapping: account.mapping,
+          enabled: account.settings.enabled,
+          critical: account.settings.critical,
+          message: account.settings.message,
+          profile: account.settings.profile
+
+        };
+        res.send(data);
       }
     });
   }
@@ -64,7 +77,7 @@ router.get('/settings/config/:account', function (req, res) {
 /**
  * Sets the data for a specific account configuration
  */
-router.post('/settings/config/:account', function (req, res) {
+router.post('/api/config/:account', function (req, res) {
   var account = req.params.account;
   if (!req.session.pryv || (req.session.pryv && !req.session.pryv.user)) {
     res.send(401);
@@ -108,7 +121,7 @@ router.post('/login/pryv', function (req, res) {
         token: token
       };
       up.getUser(username, function (error, user) {
-        if (error) {
+        if (error || !user) { // might be dangerous, creating a second account
           up.insertUser(username, {user: username, token: token}, null, null, function (error, user) {
             if (error) {
               res.send(500);
@@ -121,7 +134,7 @@ router.post('/login/pryv', function (req, res) {
         }
       });
     } else {
-      res.redirect(401, '/');
+      res.redirect(401);
     }
   });
 });

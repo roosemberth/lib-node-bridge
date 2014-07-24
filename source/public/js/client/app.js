@@ -22,7 +22,7 @@ config(function ($routeProvider, $locationProvider) {
       templateUrl: '/views/overview.html',
       controller: 'OverviewCtrl'
     }).
-    when('/configure', {
+    when('/configure/:aid', {
       templateUrl: '/views/configure.html',
       controller: 'ConfigureCtrl'
     }).
