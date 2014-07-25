@@ -28,7 +28,6 @@ router.get('/api/overview', function (req, res) {
           accounts: []
         };
         for( var i = 0, l = accounts.length; i < l; ++i) {
-          console.log(accounts[i]);
           service.accounts.push({
             aid: accounts[i].aid,
             enabled: accounts[i].settings.enabled,
