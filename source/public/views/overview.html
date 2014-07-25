@@ -1,23 +1,61 @@
+<div ng-controller="OverviewCtrl">
+    <h1>Connected accounts</h1>
 
-<div class="container">
-    <div class="jumbotron">
-        <h1>Connected accounts</h1>
-        <div id="overview">
+    <div id="overview">
             <span ng-hide="!!accounts.length">
                 You have currently no connected {{name}} accounts.
             </span>
-            <div ng-hide="!accounts.length" ng-repeat="acc in accounts">
-                {{acc.aid}}
-                {{acc.enabled}}
-                {{acc.critical}}
-                {{acc.message}}
-                <button type="button" class="btn btn-default" ng-click="editAccount(acc.aid)">Edit now!</button>
+
+        <div class="row" ng-hide="!accounts.length">
+            <div class="col-xs-2">
+               <span>User</span>
             </div>
-
-
-            <p>
-                <button type="button" class="btn btn-default" ng-click="addAccount()">Connect Now!</button>
-            </p>
+            <div class="col-xs-1">
+                Enabled
+            </div>
+            <div class="col-xs-1">
+                Error
+            </div>
+            <div class="col-xs-2">
+                Error Message
+            </div>
+            <div class="col-xs-1">
+                Edit
+            </div>
         </div>
+
+        <div ng-hide="!accounts.length" ng-repeat="acc in accounts">
+
+            <div class="row">
+                <div class="col-xs-2">
+                    <span ng-show="acc.profile.username && (acc.profile.username != 0)">{{acc.profile.username}}</span>
+                    <span ng-show="!acc.profile.username || (acc.profile.username == 0)">{{acc.profile.email}}</span>
+
+                </div>
+                <div class="col-xs-1">
+                    <span class="glyphicon glyphicon-ok" ng-hide="!acc.enabled"></span>
+                    <span class="glyphicon glyphicon-remove" ng-hide="!!acc.enabled"></span>
+                </div>
+                <div class="col-xs-1">
+                    <span class="glyphicon glyphicon-ok" ng-hide="!!acc.critical"></span>
+                    <span class="glyphicon glyphicon-remove" ng-hide="!acc.critical"></span>
+                </div>
+                <div class="col-xs-2">
+                    {{acc.message}}
+                </div>
+                <div class="col-xs-1">
+                    <button type="button" class="btn btn-default" ng-click="editAccount(acc.aid)">Edit now!</button>
+                </div>
+            </div>
+        </div>
+
+        <p style="padding-top:30px;" ng-hide="!accounts.length">
+            <button type="button" class="btn btn-default" ng-click="addAccount()">Connect Another Account Now!</button>
+        </p>
+
+        <p style="padding-top:30px;" ng-hide="!!accounts.length">
+            <button type="button" class="btn btn-default" ng-click="addAccount()">Connect Now!</button>
+        </p>
     </div>
+
 </div>

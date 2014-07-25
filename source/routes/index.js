@@ -1,4 +1,3 @@
-
 var config = require('../utils/config.js');
 var path = require('path');
 
@@ -28,6 +27,10 @@ router.get('/views/signin-service.html', function(req, res) {
 });
 
 router.get('/configure', function(req, res) {
+  res.sendfile(index);
+});
+
+router.get('/configure/:aid', function(req, res) {
   res.sendfile(index);
 });
 

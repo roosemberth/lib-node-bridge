@@ -28,6 +28,7 @@ router.get('/api/overview', function (req, res) {
           accounts: []
         };
         for( var i = 0, l = accounts.length; i < l; ++i) {
+          console.log(accounts[i]);
           service.accounts.push({
             aid: accounts[i].aid,
             enabled: accounts[i].settings.enabled,
@@ -40,6 +41,41 @@ router.get('/api/overview', function (req, res) {
       }
     });
   }
+});
+
+
+/**
+ * Accepts an authorization from Pryv and register in DB
+ */
+router.post('/login/pryv', function (req, res) {
+  var token = req.param('token');
+  var username = req.param('username');
+
+  ip.verifyPryv(username, token, function (success) {
+    if (success) {
+      req.session.pryv = {
+        user: username,
+        token: token
+      };
+
+      up.getUser(username, function (error, user) {
+        if (error || !user) { // might be dangerous, creating a second account
+          up.insertUser(username, {user: username, token: token}, null, null, function (error, user) {
+            if (error) {
+              res.send(500);
+            } else {
+              res.send(200);
+            }
+          });
+        } else {
+          // update tokens?
+          res.send(200);
+        }
+      });
+    } else {
+      res.redirect(401);
+    }
+  });
 });
 
 /**
@@ -65,7 +101,6 @@ router.get('/api/config/:account', function (req, res) {
           critical: account.settings.critical,
           message: account.settings.message,
           profile: account.settings.profile
-
         };
         res.send(data);
       }
@@ -83,6 +118,11 @@ router.post('/api/config/:account', function (req, res) {
   } else if (!account) {
     res.send(400);
   } else {
+
+
+    // check account already exists
+
+
     var data = {};
     var remoteData = req.body;
     data.aid = account;
@@ -100,39 +140,6 @@ router.post('/api/config/:account', function (req, res) {
       }
     });
   }
-});
-
-
-/**
- * Accepts an authorization from Pryv and register in DB
- */
-router.post('/login/pryv', function (req, res) {
-  var token = req.param('token');
-  var username = req.param('username');
-
-  ip.verifyPryv(username, token, function (success) {
-    if (success) {
-      req.session.pryv = {
-        user: username,
-        token: token
-      };
-      up.getUser(username, function (error, user) {
-        if (error || !user) { // might be dangerous, creating a second account
-          up.insertUser(username, {user: username, token: token}, null, null, function (error, user) {
-            if (error) {
-              res.send(500);
-            } else {
-              res.send(200);
-            }
-          });
-        } else {
-          res.send(200);
-        }
-      });
-    } else {
-      res.redirect(401);
-    }
-  });
 });
 
 module.exports = router;
