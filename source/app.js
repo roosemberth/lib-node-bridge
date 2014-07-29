@@ -29,7 +29,7 @@ var sessionConfig = {
     return uuid.v4(); // use UUIDs for session IDs
   },
   cookie: {
-    maxAge: 60000
+    maxAge: 30 * 24 * 60 * 60 * 1000
   }
 };
 
@@ -64,6 +64,3 @@ app.use(session(sessionConfig));
 app.use('/', require('./routes/api.js'));
 app.use('/', require('./routes/index.js'));
 app.use('/', require('./routes/service-ui.js'));
-
-
-

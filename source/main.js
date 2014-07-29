@@ -31,7 +31,9 @@ var PryvBridge = function (name) {
 
 PryvBridge.prototype.start = function () {
   server();
-  //this.job.start();
+  setTimeout(function () {
+    this.job.start();
+  }.bind(this), 10000);
 };
 
 
@@ -75,6 +77,9 @@ PryvBridge.prototype.addServiceAuthRoutes = function (authRoutes) {
  */
 PryvBridge.prototype.setMapper = function (schedule, mapper) {
   var doStuff = function () {
+    console.log(mapper);
+    console.warn('mapper launch');
+
     this.db.forEachUser(mapper);
   };
   this.job = new CronJob({

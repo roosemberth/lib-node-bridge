@@ -111,31 +111,25 @@ router.get('/api/config/:account', function (req, res) {
  * Sets the data for a specific account configuration
  */
 router.post('/api/config/:account', function (req, res) {
-  var account = req.params.account;
   if (!req.session.pryv || (req.session.pryv && !req.session.pryv.user)) {
-    res.send(401);
-  } else if (!account) {
-    res.send(400);
+    return res.send(401);
+  } else if (!req.body) {
+    return res.send(400);
   } else {
+    var data = req.body;
+    var pryvUsername = req.session.pryv.user;
 
-
-    // check account already exists
-
-
-    var data = {};
-    var remoteData = req.body;
-    data.aid = account;
-    data.pryv = remoteData.pryv ? remoteData.pryv : [];
-    data.service = remoteData.service ? remoteData.service : [];
-    data.map = remoteData.map ? remoteData.map : {};
-    data.settings = remoteData.settings ? remoteData.settings : {};
-    up.updateOrAddAccount(req.session.pryv.user, data, function (error, service) {
-      if (error) {
-        res.send(401);
-      } else if (!service[account]) {
-        res.send(404);
+    up.getServiceAccount(pryvUsername, data.aid, function (error, account) {
+      if (!error) {
+        account.mapping = data.mapping;
+        account.settings.enabled = data.enabled;
+        up.updateServiceAccount(pryvUsername, account, function (error) {
+          if (!error) {
+            return res.send(200);
+          }
+        });
       } else {
-        res.send(200);
+        return res.send(401);
       }
     });
   }
