@@ -49,11 +49,11 @@ nconf.defaults({
     'name': 'bridge'
   },
   'cookieSecret': 'pryv',
-  'pryvdomain': 'pryv.in',
+  'pryvdomain': 'bridges.rec.la',
   'pryvStaging': true,
   'http': {
     'port': 3000,
-    'certsPathAndKey': ''
+    'certsPathAndKey': __dirname + '/../cert/rec.la'
   }
 });
 

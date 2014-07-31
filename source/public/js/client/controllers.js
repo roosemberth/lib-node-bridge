@@ -5,6 +5,8 @@
 
 /* Controllers */
 
+var i = 0;
+
 angular.module('pryvBridge.controllers', []).
   controller('AppCtrl', function ($scope, $http) {
 
@@ -33,7 +35,6 @@ angular.module('pryvBridge.controllers', []).
           console.log('** SUCCESS! username:' + username +
             ' appToken:' + appToken +
             ' lang:' + languageCode);
-
 
           $rootScope.pryv = {
             token: appToken,
