@@ -2,8 +2,8 @@ var conf = require('../utils/config.js');
 
 module.exports = {
   getPryvDomain: function () {
-    if (conf.get('env') === 'DEV') {
-      return '.pryv.io';
+    if (conf.get('pryvStaging')) {
+      return '.pryv.in';
     } else {
       return '.pryv.io';
     }

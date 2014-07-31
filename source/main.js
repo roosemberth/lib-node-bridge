@@ -55,10 +55,11 @@ PryvBridge.prototype.addServiceEndpoints = function (endpoints) {
   app.use('/', endpoints);
 };
 
-// User management
-PryvBridge.prototype.getUser = function (token) {
-};
 
+/**
+ * Auth routes and strategy
+ * @param passportStrategy
+ */
 PryvBridge.prototype.addServiceAuthStrategy = function (passportStrategy) {
   this.passport.use(passportStrategy);
   app.use(this.passport.initialize());
@@ -67,6 +68,26 @@ PryvBridge.prototype.addServiceAuthStrategy = function (passportStrategy) {
 
 PryvBridge.prototype.addServiceAuthRoutes = function (authRoutes) {
   app.use('/', authRoutes);
+};
+
+
+/**
+ * Set base paths for includes
+ */
+PryvBridge.prototype.setBasePath = function (basePath) {
+  config.set('ui:pathprefix', basePath);
+};
+
+PryvBridge.prototype.setViewSigninPath = function (signinPath) {
+  config.set('ui:views:signin', signinPath);
+};
+
+PryvBridge.prototype.setViewConfigurePath = function (confPath) {
+  config.set('ui:views:configure', confPath);
+};
+
+PryvBridge.prototype.setViewJsControlerPath = function (ctrlPath) {
+  config.set('ui:js:controller', ctrlPath);
 };
 
 

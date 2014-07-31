@@ -72,7 +72,7 @@ router.post('/login/pryv', function (req, res) {
         }
       });
     } else {
-      res.redirect(401);
+      res.redirect('/signin-pryv', 401);
     }
   });
 });

@@ -4,11 +4,11 @@ var config = require('../utils/config.js');
 var Server = mongo.Server;
 var Db = mongo.Db;
 
-var server = new Server(config.get('mongo:host'), config.get('mongo:port'), {
+var server = new Server(config.get('database:host'), config.get('database:port'), {
   auto_reconnect: true,
   safe: true
 });
-var userDb = new Db(config.get('mongo:database'), server);
+var userDb = new Db(config.get('database:name'), server);
 var dbClientInstance = null;
 
 /**
@@ -24,8 +24,8 @@ var UserProvider = function () {
     dbClientInstance = this;
     userDb.open(function (err, db) {
       if (!err) {
-        console.log('Connected to \"' + config.get('mongo:database') + '\" database');
-        db.collection(config.get('mongo:userDb'), {strict: true}, function () {
+        console.log('Connected to \"' + config.get('database:name') + '\" database');
+        db.collection(config.get('database:userCollection'), {strict: true}, function () {
         });
       }
     });
@@ -48,7 +48,7 @@ var UserProvider = function () {
  * @param callback function(error, record)
  */
 UserProvider.prototype.insertUser = function (pryvUsername, pryvData, serviceSettings, serviceAccounts, callback) {
-  userDb.collection(config.get('mongo:userDb'), function (error, collection) {
+  userDb.collection(config.get('database:userCollection'), function (error, collection) {
     if (!pryvUsername) {
       if (typeof(callback) === 'function') {
         callback('No username supplied', null);
@@ -93,7 +93,7 @@ UserProvider.prototype.removeUser = function (pryvUsername, callback) {
     }
     return;
   }
-  userDb.collection(config.get('mongo:userDb'), function (err, collection) {
+  userDb.collection(config.get('database:userCollection'), function (err, collection) {
     collection.remove({username: pryvUsername}, function (error) {
       if (typeof(callback) === 'function') {
         return callback(error, null);
@@ -114,7 +114,7 @@ UserProvider.prototype.getUser = function (pryvUsername, callback) {
     }
     return;
   }
-  userDb.collection(config.get('mongo:userDb'), function (err, collection) {
+  userDb.collection(config.get('database:userCollection'), function (err, collection) {
     collection.findOne({username: pryvUsername}, function (error, user) {
       if (typeof(callback) === 'function') {
         return callback(error, user);
@@ -140,7 +140,7 @@ UserProvider.prototype.getService = function (pryvUsername, callback) {
     }
     return;
   }
-  userDb.collection(config.get('mongo:userDb'), function (err, collection) {
+  userDb.collection(config.get('database:userCollection'), function (err, collection) {
     collection.findOne({username: pryvUsername}, function (error, record) {
       if (error) {
         return callback(error, null);
@@ -189,7 +189,7 @@ UserProvider.prototype.setService = function (pryvUsername, service, callback) {
   if (!service) {
     service = {accounts: []};
   }
-  userDb.collection(config.get('mongo:userDb'), function (err, collection) {
+  userDb.collection(config.get('database:userCollection'), function (err, collection) {
     collection.update({username: pryvUsername}, {$set: {service: service}}, function (error) {
       if (typeof(callback) === 'function') {
         if (error) {
@@ -246,7 +246,7 @@ UserProvider.prototype.getServiceAccounts = function (pryvUsername, callback) {
   if (!pryvUsername) {
     return callback('No username supplied', null);
   }
-  userDb.collection(config.get('mongo:userDb'), function (err, collection) {
+  userDb.collection(config.get('database:userCollection'), function (err, collection) {
     collection.findOne({username: pryvUsername}, function (error, record) {
       if (error) {
         return callback(error, null);
@@ -396,7 +396,7 @@ UserProvider.prototype.removeServiceAccount = function (pryvUsername, accountId,
  * @param callback
  */
 UserProvider.prototype.getServiceUser = function (serviceUserId, callback) {
-  userDb.collection(config.get('mongo:serviceUserDb'), function (error, collection) {
+  userDb.collection(config.get('database:serviceSessionCollection'), function (error, collection) {
     collection.findOne({uid: serviceUserId}, function (error, record) {
       if (record) {
         record = record.user;
@@ -413,7 +413,7 @@ UserProvider.prototype.getServiceUser = function (serviceUserId, callback) {
  * @param callback
  */
 UserProvider.prototype.setServiceUser = function (serviceUserId, user, callback) {
-  userDb.collection(config.get('mongo:serviceUserDb'), function (error, collection) {
+  userDb.collection(config.get('database:serviceSessionCollection'), function (error, collection) {
     collection.insert({
       uid: serviceUserId,
       user: user
@@ -434,7 +434,7 @@ UserProvider.prototype.setServiceUser = function (serviceUserId, user, callback)
  * @param fn the execute function (pryvAccount, serviceAcount)
  */
 UserProvider.prototype.forEachUser = function (fn) {
-  userDb.collection(config.get('mongo:userDb'), function (error, collection) {
+  userDb.collection(config.get('database:userCollection'), function (error, collection) {
     var cursor = collection.find();
     cursor.each(function (err, item) {
       if (item !== null) {

@@ -37,51 +37,27 @@ if (configFile) {
 
 // Set default values
 nconf.defaults({
-  'mongo': {
-    'host': '127.0.0.1',
+  'database' : {
+    'host': 'localhost',
     'port': 27017,
-    'database': 'test-bridge',
-    'sessionDb': 'test-bridge-session',
-    'userDb': 'test-bridge-user',
-    'serviceUserDb': 'test-bridge-service-user'
+    'name': 'bridge',
+    'userCollection': 'users',
+    'serviceSessionCollection': 'session-service',
+    'pryvSessionCollection': 'session-pryv'
   },
+  'service': {
+    'name': 'bridge'
+  },
+  'cookieSecret': 'pryv',
+  'pryvdomain': 'pryv.in',
+  'pryvStaging': true,
   'http': {
-    'port': '3000',
-    'certsPathAndKey': 'source/cert/rec.la', // set to false for http mode
-    'ip': '0.0.0.0' // interface to bind,
-  },
-  'http2': {  // mainly used for /access to be on "rec.la" domain to retrieve SessionCookies
-    'port': '2443',
-    'certsPathAndKey': 'source/cert/rec.la',  // set to false for http mode
-    'ip': '0.0.0.0' // interface to bind
-  },
-  'browserBootstrap': {
-    'domain': 'pryv.me',
-    'fields': {
-      'browser-source': 'https://d3gblc8a9weyfb.cloudfront.net:443/browser'
-      //'browser-source': 'https://l.rec.la:2443/browser'
-    }
-  },
-  'redirect': {
-    'port': '80',  // 0 to turn off
-    'toPort': '443',
-    'ip': '0.0.0.0'
-  },
-  'caching_duration': 31557600000, // only in production
-  'support_cors': true, // cross-origin support, if set to false the javascript behaviour
-  // and page generation are modified
-  // !!! MUST BE ADJUSTED IN register://index.html configuration under pryvConfig.SUPPORT_CORS
-  'newrelic': {
-    'app_name' : 'Brige ' + os.hostname(),
-    'license_key' : 'asdf'
+    'port': 3000,
+    'certsPathAndKey': ''
   }
 });
 
 if (process.env.NODE_ENV === 'test') {
   nconf.set('http:certsPathAndKey', __dirname + '/../cert/rec.la');
   nconf.set('http:port', '3000');
-  nconf.set('http2:certsPathAndKey', __dirname + '/../cert/rec.la');
-  nconf.set('http2:port', '10443');
-  nconf.set('redirect:port', '9080');
-  nconf.set('redirect:toPort', nconf.get('http:port'));
 }

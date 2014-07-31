@@ -21,10 +21,10 @@ var app = module.exports = express();
 // Session
 var sessionConfig = {
   store: new MongoStore({
-    url: 'mongodb://' + config.get('mongo:host') + ':' +
-      config.get('mongo:port') + '/' + config.get('mongo:sessionDb')
+    url: 'mongodb://' + config.get('database:host') + ':' +
+      config.get('database:port') + '/' + config.get('database:pryvSessionCollection')
   }),
-  secret: config.get('cookie:secret'),
+  secret: config.get('cookieSecret'),
   genid: function() {
     return uuid.v4(); // use UUIDs for session IDs
   },
@@ -34,7 +34,7 @@ var sessionConfig = {
 };
 
 // Cookie Parser
-app.use(cookieParser(config.get('cookie:secret')));
+app.use(cookieParser(config.get('cookieSecret')));
 
 // Body Parser
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -46,7 +46,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 
 // Setup dev and prod differences
-if (config.get('env') === 'DEV') {
+if (config.get('environment') === 'staging') {
   app.use(morgan('dev'));
 } else {
   app.use(morgan('short'));
