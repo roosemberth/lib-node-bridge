@@ -9,7 +9,7 @@ var CronJob = require('cron').CronJob;
 
 var instance = null;
 
-var PryvBridge = function (name) {
+var PryvBridge = function (appId) {
   if (instance) {
     return instance;
   }
@@ -17,14 +17,16 @@ var PryvBridge = function (name) {
   if (this instanceof PryvBridge) {
     instance = this;
   } else {
-    return new PryvBridge(name);
+    return new PryvBridge(appId);
   }
 
   this.passport = require('passport');
-
   this.config = config;
+  this.utils = require('./utils/utils.js');
 
-  config.set('service:name', name);
+
+
+  config.set('service:name', appId);
 
   this.db = require('./provider/UserProvider.js')();
 };

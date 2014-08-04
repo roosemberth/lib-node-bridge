@@ -7,9 +7,19 @@ var express = require('express');
 var router = express.Router();
 
 var config = require('../utils/config.js');
+var utils = require('../utils/utils.js');
 
 var ip = require('../provider/IdentityProvider.js');
 var up = require('../provider/UserProvider.js')();
+
+
+router.get('/api/domain', function (req, res) {
+  return res.send({
+    pryvDomain: utils.getPryvDomain(),
+    pryvStaging: utils.isStaging(),
+    appId: config.get('service:name')
+  });
+});
 
 
 /**
