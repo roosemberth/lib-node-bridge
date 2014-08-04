@@ -1,6 +1,34 @@
+body {
+  padding: 50px;
+  font-family: 'Roboto',Georgia,Arial,sans-serif;
+  font-size:15px;
+  background-color: #eef0f2;
+  font-weight: 300;
+}
 
+h1 > img.img-responsive {
+  display: inline;
+  vertical-align: baseline;
+  margin: 0 0.1em -0.105em 0;
+  max-width: 1em;
+}
 
+a {
+  color: #00B7FF;
+}
 
-.container {
-    padding-top: 60px;
+#wrapper {
+  background-color: #fff;
+  border-radius: 3px;
+}
+
+#main {
+  position: relative;
+  margin: 2.5rem 1rem;
+}
+
+#loginWithPryv {
+  position: absolute;
+  right: 0;
+  top: 0;
 }

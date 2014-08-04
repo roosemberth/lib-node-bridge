@@ -82,7 +82,7 @@ angular.module('pryvBridge.controllers', []).
           $rootScope.pryvDomain = data.pryvDomain;
           $rootScope.pryvStaging = data.pryvStaging;
           $rootScope.appId = data.appId;
-
+          loadAppData(data.appId, data.pryvStaging)
           if ($rootScope.pryvDomain === 'rec.la' ||
             $rootScope.pryvDomain === 'pryv.in') {
             pryv.Auth.config.registerURL = { host: 'reg.pryv.in', 'ssl': true};
@@ -101,37 +101,67 @@ angular.module('pryvBridge.controllers', []).
 
 
 
+      var loadAppData = function (appId, staging) {
+        var url;
+        if (staging) {
+          url = 'https://reg.pryv.in/apps/';
+        } else {
+          url = 'https://reg.pryv.io/apps/';
+        }
+        $http({
+          method: 'GET',
+          url: url
+        }).success(function (data) {
+          if (data && data.apps && data.apps.length) {
+            for (var i in data.apps) {
+              var app = data.apps[i];
+              if (app.id === appId) {
+                $rootScope.appName = app.displayName;
+                $rootScope.appIconUrl = app.iconURL;
+                break;
+              }
+            }
+          }
+        });
+      }
 
   }]).
   controller('OverviewCtrl', ['$scope', '$rootScope', '$http', '$location',
     function ($scope, $rootScope, $http, $location) {
-    $http({
-      method: 'GET',
-      url: '/api/overview'
-    }).
-      success(function (data, status, headers, config) {
-        console.log('OverviewCtrl.success', data, status, headers, config);
-        $scope.name = data.name;
-        $scope.accounts = data.accounts;
+    // $rootScope.appId mean loggedIn
+    if ($rootScope.appId) {
+      $http({
+        method: 'GET',
+        url: '/api/overview'
       }).
-      error(function (data, status, headers, config) {
-        console.log('OverviewCtrl.error', data, status, headers, config);
-        $scope.name = 'Error!';
-      });
+        success(function (data, status, headers, config) {
+          console.log('OverviewCtrl.success', data, status, headers, config);
+          $scope.name = data.name;
+          $scope.accounts = data.accounts;
+        }).
+        error(function (data, status, headers, config) {
+          console.log('OverviewCtrl.error', data, status, headers, config);
+          $scope.name = 'Error!';
+        });
 
 
-      $scope.addAccount = function() {
+      $scope.addAccount = function () {
         _.defer(function ($rs, $l) {
           $l.path('/signin-service');
           $rs.$apply();
         }, $rootScope, $location);
       };
 
-      $scope.editAccount = function(aid) {
+      $scope.editAccount = function (aid) {
         _.defer(function ($rs, $l) {
           $l.path('/configure/' + aid);
           $rs.$apply();
         }, $rootScope, $location);
       };
-
+    } else {
+      _.defer(function ($rs, $l) {
+        $l.path('/signin-pryv/');
+        $rs.$apply();
+      }, $rootScope, $location);
+    }
   }]);

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html ng-app="pryvBridge">
 <head lang="en">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,500,700,400italic|Roboto+Condensed:400,300,700" rel="stylesheet" type="text/css">
     <script type="text/javascript" src="/js/lib/jquery-1.11.1.min.js"></script>
     <script type="text/javascript" src="/js/lib/bootstrap.min.js"></script>
     <script type="text/javascript" src="/js/lib/underscore.min.js"></script>
@@ -22,17 +23,13 @@
     <title>Pryv-Bridge</title>
 </head>
 <body>
-<nav class="navbar navbar-default" role="navigation">
-    <div class="container-fluid">
-        <div class="navbar-header">
-            <a class="navbar-brand" href="#">Bridge</a>
-        </div>
-        <span id="loginWithPryv"></span>
-    </div>
-</nav>
 
-<div class="container" ng-controller='AppCtrl' style="padding-top: 0px;">
+<div id="wrapper" class="container" ng-controller='AppCtrl' >
+  <div id="main">
+    <h1><img ng-src="{{ appIconUrl }}" class="img-responsive"> Bridge {{ appName }}</h1>
+    <span id="loginWithPryv"></span>
     <div class="jumbotron" ng-view></div>
+  </div>
 </div>
 </body>
 </html>
