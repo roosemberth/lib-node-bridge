@@ -1,14 +1,14 @@
-var conf = require('../utils/config.js');
+var config = require('../utils/config.js');
 
 module.exports = {
   getPryvDomain: function () {
-    if (conf.get('pryvStaging')) {
-      return '.pryv.in';
+    if (config.get('pryvdomain') === 'pryv.io') {
+      return 'pryv.io';
     } else {
-      return '.pryv.io';
+      return 'pryv.in';
     }
   },
   getPryvUrl: function (username) {
-    return 'https://' + username + this.getPryvDomain() +'/accesses';
+    return 'https://' + username + '.' + this.getPryvDomain() +'/accesses';
   }
 };

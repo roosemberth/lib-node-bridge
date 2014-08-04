@@ -49,7 +49,7 @@ nconf.defaults({
     'name': 'bridge'
   },
   'cookieSecret': 'pryv',
-  'pryvdomain': 'bridges.rec.la',
+  'pryvdomain': 'rec.la',
   'pryvStaging': true,
   'http': {
     'port': 3000,
