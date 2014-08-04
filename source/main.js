@@ -8,6 +8,7 @@ var server = require('./server.js');
 var app = require('./app.js');
 var config = require('./utils/config.js');
 var CronJob = require('cron').CronJob;
+var validateMap = require('./utils/map-validation.js');
 
 var instance = null;
 
@@ -25,6 +26,8 @@ var PryvBridge = function (appId) {
   this.passport = require('passport');
   this.config = config;
   this.utils = require('./utils/utils.js');
+
+  this.map = null;
 
 
 
@@ -92,6 +95,20 @@ PryvBridge.prototype.setViewConfigurePath = function (confPath) {
 
 PryvBridge.prototype.setViewJsControlerPath = function (ctrlPath) {
   config.set('ui:js:controller', ctrlPath);
+};
+
+
+/**
+ * Function to manage and verify map
+ */
+PryvBridge.prototype.setPryvMap = function (map) {
+  var validation = validateMap(map);
+  if (validation.valid) {
+    this.map = map;
+    return true;
+  } else {
+    throw new Error(validation.error);
+  }
 };
 
 
