@@ -29,7 +29,9 @@ angular.module('pryvBridge.controllers', []).
           initialization: function () {},
           needSignin: function () {},
           needValidation: function () {},
-          accepted: function (username, appToken, languageCode) {
+          signedIn: function (connection, languageCode) {
+            var username = connection.username;
+            var appToken = connection.auth;
             console.log('** SUCCESS! username:' + username +
               ' appToken:' + appToken +
               ' lang:' + languageCode);
@@ -55,6 +57,12 @@ angular.module('pryvBridge.controllers', []).
 
 
           }.bind(this),
+          signedOut: function () {
+            _.defer(function ($rs, $l) {
+              $l.path('/signin-pryv');
+              $rs.$apply();
+            }, $rootScope, $location);
+          },
           refused: function (reason) {
             console.log('** REFUSED! ' + reason);
           },
