@@ -31,7 +31,6 @@ var PryvBridge = function (appId) {
   this.map = null;
 
 
-
   config.set('service:name', appId);
 
   this.db = require('./provider/UserProvider.js')();
@@ -106,6 +105,20 @@ PryvBridge.prototype.setPryvMap = function (map) {
   var validation = validateMap(map);
   if (validation.valid) {
     this.map = map;
+    return true;
+  } else {
+    throw new Error(validation.error);
+  }
+};
+
+
+/**
+ * Function to manage and verify map
+ */
+PryvBridge.prototype.setPryvMap = function (map) {
+  var validation = validateMap(map);
+  if (validation.valid) {
+    this.map = map;
 
     streamCreator.createStreams(map);
 
@@ -122,6 +135,9 @@ PryvBridge.prototype.setPryvMap = function (map) {
  * @param mapper    A mapping function (pryvAccount, serviceAccount)
  */
 PryvBridge.prototype.setMapper = function (schedule, mapper) {
+  var doStuff = function () {
+    console.log(mapper);
+    console.warn('mapper launch');
 
   if (config.get('refresh')) {
     app.use('/',
