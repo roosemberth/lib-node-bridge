@@ -15,7 +15,7 @@ module.exports = function () {
     ca: fs.readFileSync(BASE_PATH + 'ca.pem').toString()
   };
 
-  var server = https.createServer(sslOptions,app).listen(app.get('port'), function() {
+  var server = https.createServer(sslOptions, app).listen(app.get('port'), function() {
 
     var address = server.address();
     var protocol = server.key ? 'https' : 'http';
