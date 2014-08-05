@@ -58,6 +58,7 @@ angular.module('pryvBridge.controllers', []).
 
           }.bind(this),
           signedOut: function () {
+            $rootScope.pryv = null;
             _.defer(function ($rs, $l) {
               $l.path('/signin-pryv');
               $rs.$apply();
@@ -89,9 +90,10 @@ angular.module('pryvBridge.controllers', []).
           }
 
           settings.requestingAppId = $rootScope.appId;
-
-          console.log( pryv.Auth.config);
-          pryv.Auth.setup(settings);
+          if (!$rootScope.pryv) {
+            console.log(pryv.Auth.config);
+            pryv.Auth.setup(settings);
+          }
 
         }).
         error(function (data, status, headers, config) {
@@ -128,8 +130,8 @@ angular.module('pryvBridge.controllers', []).
   }]).
   controller('OverviewCtrl', ['$scope', '$rootScope', '$http', '$location',
     function ($scope, $rootScope, $http, $location) {
-    // $rootScope.appId mean loggedIn
-    if ($rootScope.appId) {
+    // $rootScope.pryv mean loggedIn
+    if ($rootScope.pryv) {
       $http({
         method: 'GET',
         url: '/api/overview'
