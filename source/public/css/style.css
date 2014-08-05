@@ -32,3 +32,10 @@ a {
   right: 0;
   top: 0;
 }
+.status.error i {
+  color: #e74c3c;
+}
+
+.status.running  i {
+  color: #2ecc71;
+}

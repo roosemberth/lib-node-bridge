@@ -1,7 +1,17 @@
 {
-  "name": "sdk-bridge",
+  "name": "pryv-sdk-bridge",
   "version": "0.0.1",
   "private": true,
+  "contributors": [
+    {
+      "name": "Marzell Camenzind",
+      "url": "http://github.com/mcamenzind"
+    },
+    {
+      "name": "Jordane Pagand",
+      "url": "http://github.com/jpagand"
+    }
+  ],
   "dependencies": {
     "async": "0.9.0",
     "express": "4.5.1",

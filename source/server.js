@@ -7,15 +7,15 @@ var config = require('./utils/config.js');
 
 module.exports = function () {
 
-  var BASE_PATH = __dirname + config.get('http:certsPathAndKey') + '-';
+  var BASE_PATH = config.get('http:certsPathAndKey') + '-';
 
   var sslOptions = {
-    key: fs.readFileSync(BASE_PATH + 'key.pem').toString(),
-    cert: fs.readFileSync(BASE_PATH + 'cert.crt').toString(),
-    ca: fs.readFileSync(BASE_PATH + 'ca.pem').toString()
+    key: fs.readFileSync(BASE_PATH + '-key.pem').toString(),
+    cert: fs.readFileSync(BASE_PATH + '-cert.crt').toString(),
+    ca: fs.readFileSync(BASE_PATH + '-ca.pem').toString()
   };
 
-  var server = https.createServer(sslOptions,app).listen(app.get('port'), function() {
+  var server = https.createServer(sslOptions, app).listen(app.get('port'), function() {
 
     var address = server.address();
     var protocol = server.key ? 'https' : 'http';
