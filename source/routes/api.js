@@ -135,6 +135,10 @@ router.post('/api/config/:account', function (req, res) {
       if (!error) {
         account.mapping = data.mapping;
         account.settings.enabled = data.enabled;
+
+        console.log('POST', account.mapping[0].streams[0]);
+        console.log('POST', account.mapping[0].streams[1]);
+
         up.updateServiceAccount(pryvUsername, account, function (error) {
           if (!error) {
             return res.send(200);
