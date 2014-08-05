@@ -2,8 +2,9 @@ var validateStream = function (stream) {
   var error = null;
   var valid = true;
 
-  valid = valid && stream.hasOwnProperty('streamName');
-  valid = valid && stream.hasOwnProperty('streamId');
+  valid = valid && stream.hasOwnProperty('name');
+  valid = valid && stream.hasOwnProperty('id');
+  valid = valid && stream.hasOwnProperty('uid');
   valid = valid && stream.hasOwnProperty('active');
   valid = valid && stream.hasOwnProperty('error');
   valid = valid && stream.hasOwnProperty('view');
@@ -42,8 +43,8 @@ var validateEvent = function (event) {
   var error = null;
   var valid = true;
 
-  valid = valid && event.hasOwnProperty('name');
   valid = valid && event.hasOwnProperty('streamId');
+  valid = valid && event.hasOwnProperty('uid');
   valid = valid && event.hasOwnProperty('active');
   valid = valid && event.hasOwnProperty('type');
   valid = valid && event.hasOwnProperty('service');

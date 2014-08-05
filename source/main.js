@@ -106,6 +106,7 @@ PryvBridge.prototype.setPryvMap = function (map) {
     this.map = map;
     return true;
   } else {
+    console.log(validation.error);
     throw new Error(validation.error);
   }
 };

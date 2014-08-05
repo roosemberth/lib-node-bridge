@@ -13,6 +13,7 @@ var ip = require('../provider/IdentityProvider.js');
 var up = require('../provider/UserProvider.js')();
 
 
+
 router.get('/api/domain', function (req, res) {
   return res.send({
     pryvDomain: utils.getPryvDomain(),
@@ -133,12 +134,7 @@ router.post('/api/config/:account', function (req, res) {
 
     up.getServiceAccount(pryvUsername, data.aid, function (error, account) {
       if (!error) {
-        account.mapping = data.mapping;
-        account.settings.enabled = data.enabled;
-
-        console.log('POST', account.mapping[0].streams[0]);
-        console.log('POST', account.mapping[0].streams[1]);
-
+        mergeSelectedValues(account.mapping, data.mapping);
         up.updateServiceAccount(pryvUsername, account, function (error) {
           if (!error) {
             return res.send(200);
@@ -152,3 +148,20 @@ router.post('/api/config/:account', function (req, res) {
 });
 
 module.exports = router;
+
+
+var mergeSelectedValues = function (accOrigin, accRcv) {
+  if (accOrigin && accOrigin.length !== 0 && accRcv && accRcv.length !== 0) {
+    for (var ir = 0, lr = accRcv.length; ir < lr; ++ir) {
+      var curRcv = accRcv[ir];
+      for (var io = 0, lo = accOrigin.length; io < lo; ++io) {
+        var curOrig = accOrigin[io];
+        if (curRcv.uid === accOrigin[io].uid) {
+          curOrig.name = curRcv.name;
+          curOrig.active = curRcv.active;
+          mergeSelectedValues(curOrig.streams, curRcv.streams);
+        }
+      }
+    }
+  }
+};
