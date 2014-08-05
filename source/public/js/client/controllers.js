@@ -4,7 +4,6 @@
 'use strict';
 
 /* Controllers */
-
 var i = 0;
 
 angular.module('pryvBridge.controllers', []).
@@ -58,6 +57,7 @@ angular.module('pryvBridge.controllers', []).
 
           }.bind(this),
           signedOut: function () {
+            $rootScope.pryv = null;
             _.defer(function ($rs, $l) {
               $l.path('/signin-pryv');
               $rs.$apply();
@@ -89,9 +89,10 @@ angular.module('pryvBridge.controllers', []).
           }
 
           settings.requestingAppId = $rootScope.appId;
-
-          console.log( pryv.Auth.config);
-          pryv.Auth.setup(settings);
+          if (!$rootScope.pryv) {
+            console.log(pryv.Auth.config);
+            pryv.Auth.setup(settings);
+          }
 
         }).
         error(function (data, status, headers, config) {
@@ -128,8 +129,8 @@ angular.module('pryvBridge.controllers', []).
   }]).
   controller('OverviewCtrl', ['$scope', '$rootScope', '$http', '$location',
     function ($scope, $rootScope, $http, $location) {
-    // $rootScope.appId mean loggedIn
-    if ($rootScope.appId) {
+    // $rootScope.pryv mean loggedIn
+    if ($rootScope.pryv) {
       $http({
         method: 'GET',
         url: '/api/overview'
@@ -157,6 +158,21 @@ angular.module('pryvBridge.controllers', []).
           $l.path('/configure/' + aid);
           $rs.$apply();
         }, $rootScope, $location);
+      };
+      $scope.removeAccount = function (aid) {
+        if (aid) {
+          var confirmRemove = window.confirm('Are you sure you want to remove this account?');
+          if (confirmRemove) {
+            $http({ method: 'DELETE',
+                    url : 'remove/misfit',
+                    params: {pryvUsername: $rootScope.pryv.username, accountId: aid}
+            }).success(function () {
+                $scope.accounts = _.filter($scope.accounts, function (account) {
+                  return account.aid !== aid;
+                });
+              });
+          }
+        }
       };
     } else {
       _.defer(function ($rs, $l) {

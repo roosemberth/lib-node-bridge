@@ -1,61 +1,32 @@
 <div>
-    <h1>Connected accounts</h1>
+    <h3>Connected accounts</h3>
 
     <div id="overview">
             <span ng-hide="!!accounts.length">
                 You have currently no connected {{name}} accounts.
             </span>
+        <table class="table"  ng-hide="!accounts.length">
+          <thead>
+             <tr>
+               <th>Status</th><th>User</th><th>Settings</th><th>Remove</th>
+             </tr>
+          </thead>
+          <tbody>
+              <tr ng-repeat="acc in accounts">
+                <td class="status error" ng-show="!!acc.critical"><i class="glyphicon glyphicon-warning-sign"></i> Error</td>
+                <td class="status enabled" ng-show="!acc.critical && !!acc.enabled"><i class="glyphicon glyphicon-ok-sign"></i> Enabled</td>
+                <td class="status disabled" ng-show="!acc.critical && !acc.enabled"><i class="glyphicon glyphicon-minus-sign"></i> Disabled</td>
+                <td>{{ acc.profile.username || acc.profile.email }}</td>
+                <td><a href="" ng-click="editAccount(acc.aid)"><i class="glyphicon glyphicon-cog"></i></a></td>
+                <td><a href="" ng-click="removeAccount(acc.aid)"><i class="glyphicon glyphicon-trash"></i></a></td>
+              </tr>
+          </tbody>
+        </table>
 
-        <div class="row" ng-hide="!accounts.length">
-            <div class="col-xs-2">
-                <span>User</span>
-            </div>
-            <div class="col-xs-1">
-                Enabled
-            </div>
-            <div class="col-xs-1">
-                Error
-            </div>
-            <div class="col-xs-2">
-                Error Message
-            </div>
-            <div class="col-xs-1">
-                Edit
-            </div>
-        </div>
-
-        <div ng-hide="!accounts.length" ng-repeat="acc in accounts">
-
-            <div class="row">
-                <div class="col-xs-2">
-                    <span ng-show="acc.profile.username && (acc.profile.username != 0)">{{acc.profile.username}}</span>
-                    <span ng-show="!acc.profile.username || (acc.profile.username == 0)">{{acc.profile.email}}</span>
-
-                </div>
-                <div class="col-xs-1">
-                    <span class="glyphicon glyphicon-ok" ng-hide="!acc.enabled"></span>
-                    <span class="glyphicon glyphicon-remove" ng-hide="!!acc.enabled"></span>
-                </div>
-                <div class="col-xs-1">
-                    <span class="glyphicon glyphicon-ok" ng-hide="!!acc.critical"></span>
-                    <span class="glyphicon glyphicon-remove" ng-hide="!acc.critical"></span>
-                </div>
-                <div class="col-xs-2">
-                    {{acc.message}}
-                </div>
-                <div class="col-xs-1">
-                    <button type="button" class="btn btn-default" ng-click="editAccount(acc.aid)">Edit now!</button>
-                </div>
-            </div>
-        </div>
-
-        <p style="padding-top:30px;" ng-hide="!accounts.length">
-            <button type="button" class="btn btn-default" ng-click="addAccount()">Connect Another Account Now!</button>
+        <p style="padding-top:30px;">
+            <button type="button" class="btn btn-default pull-right" ng-click="addAccount()"><i class="glyphicon glyphicon-plus"></i> Add</button>
         </p>
 
-        <p style="padding-top:30px;" ng-hide="!!accounts.length">
-            <button type="button" class="btn btn-default" ng-click="addAccount()">Connect Now!</button>
-        </p>
     </div>
 
 </div>
