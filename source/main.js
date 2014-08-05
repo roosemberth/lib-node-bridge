@@ -105,6 +105,9 @@ PryvBridge.prototype.setPryvMap = function (map) {
   var validation = validateMap(map);
   if (validation.valid) {
     this.map = map;
+
+    streamCreator.createStreams(map);
+
     return true;
   } else {
     throw new Error(validation.error);
