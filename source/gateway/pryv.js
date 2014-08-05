@@ -24,7 +24,9 @@ pryvAccount.createStreams = function (callback) {
   this.connection.fetchStructure(function () {
     this.creationCounter = 0;
     this._createStreams(this.serviceAccount.map, function () {
-      db.updateServiceAccount(this.pryvAccount.user, this.serviceAccount);
+      db.updateServiceAccount(this.pryvAccount.user, this.serviceAccount, function (a, b) {
+        console.log('pryv.js batchCreateEvents', a, b);
+      });
       callback();
     }.bind(this));
   }.bind(this));
@@ -121,6 +123,8 @@ pryvAccount.batchCreateEvents = function (events, callback) {
       this.serviceAccount.map[0].error = error;
     }
     // update map in db
-    db.updateServiceAccount(this.pryvAccount.user, this.serviceAccount);
+    db.updateServiceAccount(this.pryvAccount.user, this.serviceAccount, function (a, b) {
+      console.log('pryv.js batchCreateEvents', a, b);
+    });
   }.bind(this));
 };
