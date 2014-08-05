@@ -4,7 +4,6 @@
 'use strict';
 
 /* Controllers */
-
 var i = 0;
 
 angular.module('pryvBridge.controllers', []).
@@ -159,6 +158,21 @@ angular.module('pryvBridge.controllers', []).
           $l.path('/configure/' + aid);
           $rs.$apply();
         }, $rootScope, $location);
+      };
+      $scope.removeAccount = function (aid) {
+        if (aid) {
+          var confirmRemove = window.confirm('Are you sure you want to remove this account?');
+          if (confirmRemove) {
+            $http({ method: 'DELETE',
+                    url : 'remove/misfit',
+                    params: {pryvUsername: $rootScope.pryv.username, accountId: aid}
+            }).success(function () {
+                $scope.accounts = _.filter($scope.accounts, function (account) {
+                  return account.aid !== aid;
+                });
+              });
+          }
+        }
       };
     } else {
       _.defer(function ($rs, $l) {
