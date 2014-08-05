@@ -9,7 +9,7 @@ var app = require('./app.js');
 var config = require('./utils/config.js');
 var CronJob = require('cron').CronJob;
 var validateMap = require('./utils/map-validation.js');
-var streamCreator = require('./gateway/pryv.js');
+var AccountContainer = require('./gateway/pryv.js');
 
 var instance = null;
 
@@ -105,26 +105,6 @@ PryvBridge.prototype.setPryvMap = function (map) {
   var validation = validateMap(map);
   if (validation.valid) {
     this.map = map;
-
-    streamCreator.createStreams(map);
-
-    return true;
-  } else {
-    throw new Error(validation.error);
-  }
-};
-
-
-/**
- * Function to manage and verify map
- */
-PryvBridge.prototype.setPryvMap = function (map) {
-  var validation = validateMap(map);
-  if (validation.valid) {
-    this.map = map;
-
-    streamCreator.createStreams(map);
-
     return true;
   } else {
     throw new Error(validation.error);
@@ -142,6 +122,11 @@ PryvBridge.prototype.setMapper = function (schedule, mapper) {
     console.log(mapper);
     console.warn('mapper launch');
 
+    var mapFn = function (pryvAcc, serviceAcc) {
+      mapper(new AccountContainer(pryvAcc, serviceAcc));
+    };
+
+    this.db.forEachUser(mapFn);
   if (config.get('refresh')) {
     app.use('/',
       router.get('/api/refresh/:secret', function (req, res) {
