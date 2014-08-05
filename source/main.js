@@ -9,6 +9,7 @@ var app = require('./app.js');
 var config = require('./utils/config.js');
 var CronJob = require('cron').CronJob;
 var validateMap = require('./utils/map-validation.js');
+var streamCreator = require('./gateway/pryv.js');
 
 var instance = null;
 
@@ -105,6 +106,9 @@ PryvBridge.prototype.setPryvMap = function (map) {
   var validation = validateMap(map);
   if (validation.valid) {
     this.map = map;
+
+    streamCreator.createStreams(map);
+
     return true;
   } else {
     throw new Error(validation.error);

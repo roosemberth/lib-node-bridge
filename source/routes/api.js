@@ -54,6 +54,8 @@ router.get('/api/overview', function (req, res) {
 });
 
 
+// Clear cookie at logout
+
 /**
  * Accepts an authorization from Pryv and register in DB
  */
