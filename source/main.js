@@ -2,6 +2,8 @@
  * Created by marzell on 7/10/14.
  */
 
+var express = require('express');
+var router = express.Router();
 var server = require('./server.js');
 var app = require('./app.js');
 var config = require('./utils/config.js');
@@ -99,10 +101,24 @@ PryvBridge.prototype.setViewJsControlerPath = function (ctrlPath) {
  * @param mapper    A mapping function (pryvAccount, serviceAccount)
  */
 PryvBridge.prototype.setMapper = function (schedule, mapper) {
-  var doStuff = function () {
-    console.log(mapper);
-    console.warn('mapper launch');
 
+  if (config.get('refresh')) {
+    app.use('/',
+      router.get('/api/refresh/:secret', function (req, res) {
+        var secret = req.params.secret;
+        console.log(secret);
+        if (secret === config.get('refresh')) {
+          this.db.forEachUser(mapper);
+        }
+        return res.send(404);
+      }.bind(this))
+    );
+  }
+
+
+  this.mapper = mapper;
+  var doStuff = function () {
+    console.warn('mapper launch');
     this.db.forEachUser(mapper);
   };
   this.job = new CronJob({

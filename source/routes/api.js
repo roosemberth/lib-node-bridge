@@ -13,6 +13,7 @@ var ip = require('../provider/IdentityProvider.js');
 var up = require('../provider/UserProvider.js')();
 
 
+
 router.get('/api/domain', function (req, res) {
   return res.send({
     pryvDomain: utils.getPryvDomain(),
@@ -37,7 +38,7 @@ router.get('/api/overview', function (req, res) {
           name: config.get('service:name'),
           accounts: []
         };
-        for( var i = 0, l = accounts.length; i < l; ++i) {
+        for (var i = 0, l = accounts.length; i < l; ++i) {
           service.accounts.push({
             aid: accounts[i].aid,
             enabled: accounts[i].settings.enabled,
