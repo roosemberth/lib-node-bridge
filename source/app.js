@@ -22,7 +22,8 @@ var app = module.exports = express();
 var sessionConfig = {
   store: new MongoStore({
     url: 'mongodb://' + config.get('database:host') + ':' +
-      config.get('database:port') + '/' + config.get('database:pryvSessionCollection')
+      config.get('database:port') + '/' + config.get('database:name') +
+      '/' + config.get('database:pryvSessionCollection')
   }),
   secret: config.get('cookieSecret'),
   genid: function() {
