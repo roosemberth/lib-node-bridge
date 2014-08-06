@@ -119,16 +119,19 @@ PryvBridge.prototype.setPryvMap = function (map) {
  * @param mapper    A mapping function (pryvAccount, serviceAccount)
  */
 PryvBridge.prototype.setMapper = function (schedule, mapper) {
-  var doStuff = function () {
+  this.mapper = mapper;
 
-    var mapFn = function (pryvAcc, serviceAcc) {
+  var doStuff = function () {
+    this.db.forEachUser(function (pryvAcc, serviceAcc) {
       var accCtnr = new AccountContainer(pryvAcc, serviceAcc);
       console.log('MAP', accCtnr.serviceAccount.mapping[0].streams[0]);
       console.log('MAP', accCtnr.serviceAccount.mapping[0].streams[1]);
-      mapper(accCtnr);
-    };
+      accCtnr.createStreams(function () {
+        mapper(accCtnr);
+      });
+    });
+  };
 
-    this.db.forEachUser(mapFn);
   if (config.get('refresh')) {
     app.use('/',
       router.get('/api/refresh/:secret', function (req, res) {
@@ -143,12 +146,6 @@ PryvBridge.prototype.setMapper = function (schedule, mapper) {
     );
   }
 
-
-  this.mapper = mapper;
-  var doStuff = function () {
-    console.warn('Launched Mapper: cron');
-    this.db.forEachUser(mapper);
-  };
   this.job = new CronJob({
     cronTime: schedule,
     onTick: doStuff,
