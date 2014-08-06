@@ -119,15 +119,12 @@ PryvBridge.prototype.setPryvMap = function (map) {
  */
 PryvBridge.prototype.setMapper = function (schedule, mapper) {
   var doStuff = function () {
-
-    var mapFn = function (pryvAcc, serviceAcc) {
+    this.db.forEachUser(function (pryvAcc, serviceAcc) {
       var accCtnr = new AccountContainer(pryvAcc, serviceAcc);
-      console.log('MAP', accCtnr.serviceAccount.mapping[0].streams[0]);
-      console.log('MAP', accCtnr.serviceAccount.mapping[0].streams[1]);
-      mapper(accCtnr);
-    };
-
-    this.db.forEachUser(mapFn);
+      accCtnr.createStreams(function () {
+        mapper(accCtnr);
+      });
+    });
   };
   this.job = new CronJob({
     cronTime: schedule,
