@@ -106,8 +106,9 @@ PryvBridge.prototype.setMapper = function (schedule, mapper) {
     app.use('/',
       router.get('/api/refresh/:secret', function (req, res) {
         var secret = req.params.secret;
-        console.log(secret);
+        console.log(secret, config.get('refresh'));
         if (secret === config.get('refresh')) {
+          console.warn('Launched Mapper: force');
           this.db.forEachUser(mapper);
         }
         return res.send(404);
@@ -118,7 +119,7 @@ PryvBridge.prototype.setMapper = function (schedule, mapper) {
 
   this.mapper = mapper;
   var doStuff = function () {
-    console.warn('mapper launch');
+    console.warn('Launched Mapper: cron');
     this.db.forEachUser(mapper);
   };
   this.job = new CronJob({

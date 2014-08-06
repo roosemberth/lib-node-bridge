@@ -441,8 +441,15 @@ UserProvider.prototype.forEachUser = function (fn) {
         var pryv = item.pryv;
         var service = item.service;
         for (var i = 0; i < service.accounts.length; ++i) {
+          console.warn('launching for', pryv.user, service.accounts[i].aid);
           fn(pryv, service.accounts[i]);
         }
+        if (service.accounts.length === 0) {
+          console.warn('launching for', pryv.user, 'but does not have registered accounts');
+        }
+      } else {
+        console.warn('launching for nobody, since collection is empty');
+
       }
     });
   });
