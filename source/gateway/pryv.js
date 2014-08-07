@@ -2,10 +2,10 @@ var Pryv = require('pryv');
 var _ = require('underscore');
 var utils = require('../utils/utils.js');
 var db = require('../provider/UserProvider.js')();
+var MapUtils = require('../utils/MapUtils.js');
 
 
 module.exports = function (pryvAccount, serviceAccount) {
-  this.creationCounter = 0;
   this.pryvAccount = pryvAccount;
   this.serviceAccount = serviceAccount;
   this.connection = new Pryv.Connection({
@@ -14,11 +14,31 @@ module.exports = function (pryvAccount, serviceAccount) {
     staging: utils.isStaging()
   });
 
+  this.createStreams = function (callback) {
+    MapUtils.bfExecutor(this.serviceAccount.mapping, function (node, callback) {
+      if (node.active && (!node.error || (node.error && !node.error.id))) {
+        if (!node.id) {
+          var stream2create = _.pick(node, 'name', 'parentId');
+          this.connection.streams.create(stream2create, function (error, stream) {
+            if (!error || (error && error.id === 'item-already-exists')) {
+                console.log(stream);
+            }
+          });
+        } else {
+          return callback(true);
+        }
+      } else {
+        return callback(false);
+      }
+
+    }, callback);
+  };
+
 
   /**
    * This function creates if needed the streams.
    * @param callback called when finished
-   */
+
   this.createStreams = function (callback) {
     console.warn('calling createStreams');
     this.connection.fetchStructure(function () {
@@ -32,75 +52,89 @@ module.exports = function (pryvAccount, serviceAccount) {
       }.bind(this));
     }.bind(this));
   };
+  */
 
 
   /**
    * This function takes a single argument
    * @param callback
-   */
+
   this._createStreams = function (subTree, callback) {
     if (subTree instanceof Array) {
+      this.creationCounter += subTree.length;
+      console.warn('Created childs, since arrray, now at', this.creationCounter);
       for (var k = 0; k < subTree.length; ++k) {
-        this.creationCounter++;
         this._createStreams(subTree[k], callback);
       }
     } else if (subTree.active && (!subTree.error || (subTree.error && !subTree.error.id))) {
+      console.log('current', subTree.uid, subTree.error);
+
+      // The stream was not created
       if (!subTree.id) {
-
-        console.warn('is NOT array', this.creationCounter);
-
         var stream = _.pick(subTree, 'name', 'parentId');
 
+        this.creationCounter++;
+        console.warn('Created dispatch create', this.creationCounter);
         this.connection.streams.create(stream, function (error, stream) {
-
+          console.log('error, stream', error, stream);
           if (!error) {
             subTree.id = stream.id;
+            this.creationCounter += subTree.streams.length;
+            console.warn('Created childs, now at', this.creationCounter);
             for (var i = 0, l = subTree.streams.length; i < l; ++i) {
-              subTree.streams[i].parentId = stream.id;
-              this.creationCounter++;
-              console.warn('this.creationCounter++', this.creationCounter);
+              subTree.streams[i].parentId = subTree.id;
               this._createStreams(subTree.streams[i], callback);
             }
-          }
-          if (error && error.id === 'item-already-exists') {
+          } else if (error && error.id === 'item-already-exists') {
             var streams = this.connection.datastore.getStreams();
             for (var j = 0, ls = streams.length; j < ls; ++j) {
-              if (streams[j].name === subTree.name) {
+              if (streams[j].name === subTree.name &&
+                streams[j].parentId === subTree.parentId) {
                 subTree.id = streams[j].id;
+                this.creationCounter += subTree.streams.length;
+                console.warn('Created childs, now at', this.creationCounter);
+                for (var f = 0, m = subTree.streams.length; f < m; ++f) {
+                  subTree.streams[f].parentId = subTree.id;
+                  this._createStreams(subTree.streams[f], callback);
+                }
                 break;
               }
             }
           } else {
-            subTree.error = error;
+            if (error.id !== 'API_UNREACHEABLE') {
+              subTree.error = error;
+            }
           }
-          this.creationCounter--;
-          console.warn('this.creationCounter--', this.creationCounter);
-
-          if (this.creationCounter === 0) {
+          console.warn('// I leave -> decrement, then check if I was the last one.',
+            this.creationCounter);
+          if (!(--this.creationCounter) && this.creationCounter === 0) {
             console.warn('this.creationCounter zero', this.creationCounter);
-            callback();
+            return callback();
           }
         }.bind(this));
-      } else { // has an id, but maybe not the childs
+
+      } else { // The stream has already been created.
+        this.creationCounter += subTree.streams.length;
+        console.warn('Created childs, now at', this.creationCounter);
         for (var i = 0, l = subTree.streams.length; i < l; ++i) {
           subTree.streams[i].parentId = subTree.streams[i].parentId ?
             subTree.streams[i].parentId : subTree.id;
-          this.creationCounter++;
-          console.warn('this.creationCounter++', this.creationCounter);
           this._createStreams(subTree.streams[i], callback);
         }
       }
+    } else {
+      console.log('current', subTree.uid, subTree.error);
     }
 
-    // Own exit notif
-    this.creationCounter--;
-    console.warn('this.creationCounter--', this.creationCounter);
-    if (this.creationCounter === 0) {
+    // I leave -> decrement, then check if I was the last one.
+    console.warn('// I leave -> decrement, then check if I was the last one.',
+      this.creationCounter);
+    if (!(--this.creationCounter) && this.creationCounter === 0) {
       console.warn('this.creationCounter zero', this.creationCounter);
-      callback();
+      return callback();
     }
   };
-
+   */
 
 
 

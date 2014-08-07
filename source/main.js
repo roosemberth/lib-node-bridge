@@ -25,6 +25,7 @@ var PryvBridge = function (appId) {
   this.passport = require('passport');
   this.config = config;
   this.utils = require('./utils/utils.js');
+  this.counter = 0;
 
   this.map = null;
 
@@ -121,10 +122,13 @@ PryvBridge.prototype.setMapper = function (schedule, mapper) {
   var doStuff = function () {
     this.db.forEachUser(function (pryvAcc, serviceAcc) {
       var accCtnr = new AccountContainer(pryvAcc, serviceAcc);
+      var current = JSON.parse(JSON.stringify(++this.counter));
+      console.warn('\n\n\n\n', 'LAUNCH', current);
       accCtnr.createStreams(function () {
-        mapper(accCtnr);
-      });
-    });
+        console.warn('DONE', current, '\n\n\n\n');
+        //mapper(accCtnr);
+      }.bind(this));
+    }.bind(this));
   };
   this.job = new CronJob({
     cronTime: schedule,
