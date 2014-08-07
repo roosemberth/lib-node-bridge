@@ -22,7 +22,7 @@ module.exports = function (pryvAccount, serviceAccount) {
     this.connection.fetchStructure(function (error) {
       if (!error) {
         MapUtils.bfExecutor(this.serviceAccount.mapping, function (node, callback) {
-          if (node.active && (!node.error || (node.error && !node.error.id))) {
+          if (MapUtils.isActiveNode(node)) {
             if (!node.id) {
               var stream2create = _.pick(node, 'name', 'parentId');
               this.connection.streams.create(stream2create, function (error, stream) {
@@ -123,20 +123,76 @@ module.exports = function (pryvAccount, serviceAccount) {
         }
 
         if (notFound.length !== 0) {
-          this.connection.events.batchWithData(notFound, function (error, events) {
-            // manage errors
+          this.connection.events.batchWithData(notFound, function (error, results) {
+            // Manage all the errors
+            if (!error) {
 
+              // We should traverse results, detect the error and set the map
+              // error.
+              streams = {};
+              for (var i = 0, l = results.length; i < l; ++i) {
+                if (results[i].error) {
+                  streams[notFound[i].streamId] = results[i].error;
+                }
+              }
 
-          });
+              // In this case we failed to push some the events and
+              // will set error and reset last update on the node.
+              setFailedStreams(this.serviceAccount.mapping, this.pryvAccount.user,
+                this.serviceAccount, streams, error, function () {
+                  MapUtils.updateUpdateTimestamp(this.serviceAccount.mapping,
+                    db.updateServiceAccount(this.pryvAccount.user, this.serviceAccount,
+                      function () {
+                      callback();
+                    }));
+                }.bind(this));
+
+            } else {
+              if (error.id === 'API_UNREACHEABLE') {
+                error = null;
+              }
+              // In this case we failed to push the events and
+              // set error and reset last update on the node.
+              setFailedStreams(this.serviceAccount.mapping, this.pryvAccount.user,
+                this.serviceAccount, streams, error, callback);
+            }
+          }.bind(this));
         }
       } else {
-        this.serviceAccount.map[0].error = error;
+        if (error.id === 'API_UNREACHEABLE') {
+          error = null;
+        }
+        // In this case we failed to fetch the events and
+        // set error and reset last update on the node.
+        setFailedStreams(this.serviceAccount.mapping, this.pryvAccount.user,
+          this.serviceAccount, streams, error, callback);
       }
-      // update map in db
-      db.updateServiceAccount(this.pryvAccount.user, this.serviceAccount, function (a, b) {
-        callback();
-      });
+
     }.bind(this));
   };
 
+};
+
+
+var setFailedStreams = function (map, pryvUser, serviceAccount, streams, error, callback) {
+  MapUtils.bfExecutor(this.serviceAccount.mapping, function (node, callback) {
+    if (MapUtils.isActiveNode(node)) {
+      if (streams instanceof Array) {
+        if (_.indexOf(streams, node.id) !== -1) {
+          delete node.updateCurrent;
+          node.error = error;
+        }
+      } else if (!!streams[node.id]) {
+        delete node.updateCurrent;
+        node.error = streams[node.id];
+      }
+      callback(true);
+    } else {
+      callback(false);
+    }
+  }, function () {
+    db.updateServiceAccount(pryvUser, serviceAccount, function () {
+      callback();
+    });
+  });
 };

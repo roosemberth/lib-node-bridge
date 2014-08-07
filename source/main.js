@@ -9,7 +9,7 @@ var app = require('./app.js');
 var config = require('./utils/config.js');
 var CronJob = require('cron').CronJob;
 var validateMap = require('./utils/map-validation.js');
-var AccountContainer = require('./gateway/pryv.js');
+var AccountContainer = require('./gateway/AccountContainer.js');
 
 var instance = null;
 
@@ -127,8 +127,8 @@ PryvBridge.prototype.setMapper = function (schedule, mapper) {
       var accCtnr = new AccountContainer(pryvAcc, serviceAcc);
       accCtnr.createStreams(function () {
         mapper(accCtnr);
-      });
-    });
+      }.bind(this));
+    }.bind(this));
   };
 
   if (config.get('refresh')) {
