@@ -135,4 +135,9 @@ PryvBridge.prototype.setMapper = function (schedule, mapper) {
 };
 
 
-module.exports = PryvBridge;
+module.exports = {
+  PryvBridge: PryvBridge,
+  MapUtils: require('./utils/MapUtils.js'),
+  Database: require('./provider/UserProvider.js'),
+  Config: require('./utils/config.js')
+};
