@@ -31,6 +31,7 @@ var PryvBridge = function (appId) {
   this.map = null;
 
 
+
   config.set('service:name', appId);
 
   this.db = require('./provider/UserProvider.js')();
@@ -124,8 +125,6 @@ PryvBridge.prototype.setMapper = function (schedule, mapper) {
   var doStuff = function () {
     this.db.forEachUser(function (pryvAcc, serviceAcc) {
       var accCtnr = new AccountContainer(pryvAcc, serviceAcc);
-      console.log('MAP', accCtnr.serviceAccount.mapping[0].streams[0]);
-      console.log('MAP', accCtnr.serviceAccount.mapping[0].streams[1]);
       accCtnr.createStreams(function () {
         mapper(accCtnr);
       });

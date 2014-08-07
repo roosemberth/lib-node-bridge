@@ -135,6 +135,7 @@ router.post('/api/config/:account', function (req, res) {
     up.getServiceAccount(pryvUsername, data.aid, function (error, account) {
       if (!error) {
         mergeSelectedValues(account.mapping, data.mapping);
+        console.log('account.mapping', account.mapping);
         up.updateServiceAccount(pryvUsername, account, function (error) {
           if (!error) {
             return res.send(200);
@@ -159,7 +160,7 @@ var mergeSelectedValues = function (accOrigin, accRcv) {
         if (curRcv.uid === accOrigin[io].uid) {
           curOrig.name = curRcv.name;
           curOrig.active = curRcv.active;
-          mergeSelectedValues(curOrig.streams, curRcv.streams);
+         mergeSelectedValues(curOrig.streams, curRcv.streams);
         }
       }
     }
