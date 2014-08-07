@@ -14,130 +14,71 @@ module.exports = function (pryvAccount, serviceAccount) {
     staging: utils.isStaging()
   });
 
-  this.createStreams = function (callback) {
-    MapUtils.bfExecutor(this.serviceAccount.mapping, function (node, callback) {
-      if (node.active && (!node.error || (node.error && !node.error.id))) {
-        if (!node.id) {
-          var stream2create = _.pick(node, 'name', 'parentId');
-          this.connection.streams.create(stream2create, function (error, stream) {
-            if (!error || (error && error.id === 'item-already-exists')) {
-                console.log(stream);
-            }
-          });
-        } else {
-          return callback(true);
-        }
-      } else {
-        return callback(false);
-      }
-
-    }, callback);
-  };
-
-
   /**
-   * This function creates if needed the streams.
-   * @param callback called when finished
-
+   * Creates the streams recursively if active and not having an error
+   * @param {function} callback called when done
+   */
   this.createStreams = function (callback) {
-    console.warn('calling createStreams');
-    this.connection.fetchStructure(function () {
-      this.creationCounter = 1;
-      console.warn('this.creationCounter', this.creationCounter);
-      this._createStreams(this.serviceAccount.mapping, function () {
-        db.updateServiceAccount(this.pryvAccount.user, this.serviceAccount, function () {
-          callback();
-        });
-
-      }.bind(this));
-    }.bind(this));
-  };
-  */
-
-
-  /**
-   * This function takes a single argument
-   * @param callback
-
-  this._createStreams = function (subTree, callback) {
-    if (subTree instanceof Array) {
-      this.creationCounter += subTree.length;
-      console.warn('Created childs, since arrray, now at', this.creationCounter);
-      for (var k = 0; k < subTree.length; ++k) {
-        this._createStreams(subTree[k], callback);
-      }
-    } else if (subTree.active && (!subTree.error || (subTree.error && !subTree.error.id))) {
-      console.log('current', subTree.uid, subTree.error);
-
-      // The stream was not created
-      if (!subTree.id) {
-        var stream = _.pick(subTree, 'name', 'parentId');
-
-        this.creationCounter++;
-        console.warn('Created dispatch create', this.creationCounter);
-        this.connection.streams.create(stream, function (error, stream) {
-          console.log('error, stream', error, stream);
-          if (!error) {
-            subTree.id = stream.id;
-            this.creationCounter += subTree.streams.length;
-            console.warn('Created childs, now at', this.creationCounter);
-            for (var i = 0, l = subTree.streams.length; i < l; ++i) {
-              subTree.streams[i].parentId = subTree.id;
-              this._createStreams(subTree.streams[i], callback);
-            }
-          } else if (error && error.id === 'item-already-exists') {
-            var streams = this.connection.datastore.getStreams();
-            for (var j = 0, ls = streams.length; j < ls; ++j) {
-              if (streams[j].name === subTree.name &&
-                streams[j].parentId === subTree.parentId) {
-                subTree.id = streams[j].id;
-                this.creationCounter += subTree.streams.length;
-                console.warn('Created childs, now at', this.creationCounter);
-                for (var f = 0, m = subTree.streams.length; f < m; ++f) {
-                  subTree.streams[f].parentId = subTree.id;
-                  this._createStreams(subTree.streams[f], callback);
+    this.connection.fetchStructure(function (error) {
+      if (!error) {
+        MapUtils.bfExecutor(this.serviceAccount.mapping, function (node, callback) {
+          if (node.active && (!node.error || (node.error && !node.error.id))) {
+            if (!node.id) {
+              var stream2create = _.pick(node, 'name', 'parentId');
+              this.connection.streams.create(stream2create, function (error, stream) {
+                if (error && error.id === 'item-already-exists') {
+                  var streams = this.connection.datastore.getStreams();
+                  var parentId = typeof(node.parentId) === 'undefined' ? null : node.parentId;
+                  for (var i = 0, l = streams.length; i < l; ++i) {
+                    if (streams[i].name === node.name &&
+                      streams[i].parentId === parentId) {
+                      stream = streams[i];
+                      error = null;
+                      break;
+                    }
+                  }
                 }
-                break;
+
+                if (!error) {
+                  node.id = stream.id;
+                  for (var j = 0, ln = node.streams.length; j < ln; ++j) {
+                    node.streams[j].parentId = node.id;
+                  }
+                  return callback(true);
+                } else if (error && error.id === 'API_UNREACHEABLE') {
+                  return callback(false);
+                } else {
+                  node.error = error;
+                  return callback(false);
+                }
+              }.bind(this));
+            } else {
+              for (var j = 0, ln = node.streams.length; j < ln; ++j) {
+                if (!node.streams[j].parentId) {
+                  node.streams[j].parentId = node.id;
+                }
               }
+              return callback(true);
             }
           } else {
-            if (error.id !== 'API_UNREACHEABLE') {
-              subTree.error = error;
-            }
+            return callback(false);
           }
-          console.warn('// I leave -> decrement, then check if I was the last one.',
-            this.creationCounter);
-          if (!(--this.creationCounter) && this.creationCounter === 0) {
-            console.warn('this.creationCounter zero', this.creationCounter);
-            return callback();
-          }
+        }.bind(this), function () {
+          db.updateServiceAccount(this.pryvAccount.user, this.serviceAccount, function () {
+            callback();
+          });
         }.bind(this));
-
-      } else { // The stream has already been created.
-        this.creationCounter += subTree.streams.length;
-        console.warn('Created childs, now at', this.creationCounter);
-        for (var i = 0, l = subTree.streams.length; i < l; ++i) {
-          subTree.streams[i].parentId = subTree.streams[i].parentId ?
-            subTree.streams[i].parentId : subTree.id;
-          this._createStreams(subTree.streams[i], callback);
-        }
       }
-    } else {
-      console.log('current', subTree.uid, subTree.error);
-    }
-
-    // I leave -> decrement, then check if I was the last one.
-    console.warn('// I leave -> decrement, then check if I was the last one.',
-      this.creationCounter);
-    if (!(--this.creationCounter) && this.creationCounter === 0) {
-      console.warn('this.creationCounter zero', this.creationCounter);
-      return callback();
-    }
+    }.bind(this));
   };
+
+
+  /**
+   * Pushes the event-likes to this associated Pryv account and signals
+   * the error in the mapping tree.
+   * @param {Array} events of Pryv's event-like
+   * @param {function} callback called when done
    */
-
-
-
   this.batchCreateEvents = function (events, callback) {
 
     // Extract concerned streams and timeframe
