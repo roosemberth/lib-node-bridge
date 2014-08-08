@@ -313,11 +313,11 @@ UserProvider.prototype.addServiceAccount = function (pryvUsername, account, call
 
 UserProvider.prototype.updateServiceAccount = function (pryvUsername, account, callback) {
   var that = this;
+  if (typeof(callback) !== 'function') {
+    callback = function () {};
+  }
   if (!pryvUsername || !account || !account.aid) {
-    if (typeof(callback) === 'function') {
-      return callback('No pryvUsername or account supplied', null);
-    }
-    return;
+    return callback('No pryvUsername or account supplied', null);
   }
   that.getService(pryvUsername, function (err, service) {
     if (err) {

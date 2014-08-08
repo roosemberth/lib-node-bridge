@@ -45,8 +45,10 @@ var syncBfExecutor = function (tree, fn) {
   var bfs = function (node) {
     if (node) {
       if(fn(node)) {
-        for (var i = 0; i < l; ++i) {
-          bfs(tree[i]);
+        if (node.streams && node.streams.length) {
+          for (var i = 0, l = node.streams.length; i < l; ++i) {
+            bfs(node.streams[i]);
+          }
         }
       }
     }
@@ -57,7 +59,7 @@ var syncBfExecutor = function (tree, fn) {
       bfs(tree[i]);
     }
   } else {
-    bfs(tree);
+    return bfs(tree);
   }
 };
 
@@ -79,19 +81,23 @@ var clearAllErrors = function (map, callback) {
   }, callback);
 };
 
-var updateUpdateTimestamp = function (map, callback) {
-  bfExecutor(map, function (node, callback) {
+var updateUpdateTimestamp = function (map) {
+  syncBfExecutor(map, function (node) {
     if (isActiveNode(node)) {
       if (node.updateCurrent) {
-        if (!(!node.updateLast || (!!node.updateLast && node.updateLast > node.updateCurrent))) {
+        if (!node.updateLast) {
           node.updateLast = node.updateCurrent;
+        } else {
+          if (node.updateCurrent >= node.updateLast) {
+            node.updateLast = node.updateCurrent;
+          }
         }
       }
-      return callback(true);
+      return true;
     } else {
-      return callback(false);
+      return false;
     }
-  }, callback);
+  });
 };
 
 
