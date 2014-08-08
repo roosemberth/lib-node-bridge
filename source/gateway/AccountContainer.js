@@ -130,10 +130,10 @@ module.exports = function (pryvAccount, serviceAccount) {
             if (events[i].time === ev[j].time &&
               events[i].streamId === ev[j].streamId &&
               events[i].type === ev[j].type) {
-              if (events[i].duration && ev[i].duration &&
-                events[i].duration === ev[i].duration) {
-                if (events[i].content && ev[i].content &&
-                  events[i].content === ev[i].content) {
+              if (events[i].duration && ev[j].duration &&
+                events[i].duration === ev[j].duration) {
+                if (events[i].content && ev[j].content &&
+                  events[i].content === ev[j].content) {
                   found = true;
                   break;
                 }
@@ -146,7 +146,7 @@ module.exports = function (pryvAccount, serviceAccount) {
         }
 
         if (notFound.length !== 0) {
-          this.connection.events.batchWithData(notFound, function (error, results) {
+          return this.connection.events.batchWithData(notFound, function (error, results) {
             // Manage all the errors
             if (!error) {
 
@@ -164,7 +164,7 @@ module.exports = function (pryvAccount, serviceAccount) {
               setFailedStreams(this.serviceAccount.mapping, this.pryvAccount.user,
                 this.serviceAccount, streams, error);
               MapUtils.updateUpdateTimestamp(this.serviceAccount.mapping);
-              db.updateServiceAccount(this.pryvAccount.user, this.serviceAccount,
+              return db.updateServiceAccount(this.pryvAccount.user, this.serviceAccount,
                 function () {
                   return callback();
               });
