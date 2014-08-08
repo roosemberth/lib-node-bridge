@@ -26,10 +26,21 @@ module.exports = function (pryvAccount, serviceAccount) {
             if (!node.id) {
               var stream2create = _.pick(node, 'name', 'parentId');
               this.connection.streams.create(stream2create, function (error, stream) {
+                //console.log(error);
                 if (error && error.id === 'item-already-exists') {
-                  var streams = this.connection.datastore.getStreams();
+
                   var parentId = typeof(node.parentId) === 'undefined' ? null : node.parentId;
+                  var streams = null;
+
+                  if (parentId) {
+                    streams = this.connection.datastore.getStreamById(parentId).children;
+                  } else {
+                    streams = this.connection.datastore.getStreams();
+                  }
+
+                  //console.log('to find\t', node.name, parentId);
                   for (var i = 0, l = streams.length; i < l; ++i) {
+                    //console.log('current\t', streams[i].name, streams[i].parentId);
                     if (streams[i].name === node.name &&
                       streams[i].parentId === parentId) {
                       stream = streams[i];
@@ -38,9 +49,11 @@ module.exports = function (pryvAccount, serviceAccount) {
                     }
                   }
                 }
+                //console.log(error, stream);
 
                 if (!error) {
                   node.id = stream.id;
+                  //console.log(node.error, node.id);
                   for (var j = 0, ln = node.streams.length; j < ln; ++j) {
                     node.streams[j].parentId = node.id;
                   }
@@ -80,6 +93,16 @@ module.exports = function (pryvAccount, serviceAccount) {
    * @param {function} callback called when done
    */
   this.batchCreateEvents = function (events, callback) {
+
+    if (typeof(callback) !== 'function') {
+      callback = function () {};
+    }
+
+    if (!events || (events && events.length === 0)) {
+      MapUtils.updateUpdateTimestamp(this.serviceAccount.mapping);
+      db.updateServiceAccount(this.pryvAccount.user, this.serviceAccount);
+      return callback();
+    }
 
     // Extract concerned streams and timeframe
     var streams = [];
@@ -139,13 +162,12 @@ module.exports = function (pryvAccount, serviceAccount) {
               // In this case we failed to push some the events and
               // will set error and reset last update on the node.
               setFailedStreams(this.serviceAccount.mapping, this.pryvAccount.user,
-                this.serviceAccount, streams, error, function () {
-                  MapUtils.updateUpdateTimestamp(this.serviceAccount.mapping,
-                    db.updateServiceAccount(this.pryvAccount.user, this.serviceAccount,
-                      function () {
-                      callback();
-                    }));
-                }.bind(this));
+                this.serviceAccount, streams, error);
+              MapUtils.updateUpdateTimestamp(this.serviceAccount.mapping);
+              db.updateServiceAccount(this.pryvAccount.user, this.serviceAccount,
+                function () {
+                  return callback();
+              });
 
             } else {
               if (error.id === 'API_UNREACHEABLE') {
@@ -154,9 +176,12 @@ module.exports = function (pryvAccount, serviceAccount) {
               // In this case we failed to push the events and
               // set error and reset last update on the node.
               setFailedStreams(this.serviceAccount.mapping, this.pryvAccount.user,
-                this.serviceAccount, streams, error, callback);
+                this.serviceAccount, streams, error);
+              return callback();
             }
           }.bind(this));
+        } else {
+          MapUtils.updateUpdateTimestamp(this.serviceAccount.mapping);
         }
       } else {
         if (error.id === 'API_UNREACHEABLE') {
@@ -165,17 +190,17 @@ module.exports = function (pryvAccount, serviceAccount) {
         // In this case we failed to fetch the events and
         // set error and reset last update on the node.
         setFailedStreams(this.serviceAccount.mapping, this.pryvAccount.user,
-          this.serviceAccount, streams, error, callback);
+          this.serviceAccount, streams, error);
+        return callback();
       }
 
     }.bind(this));
   };
-
 };
 
 
-var setFailedStreams = function (map, pryvUser, serviceAccount, streams, error, callback) {
-  MapUtils.bfExecutor(this.serviceAccount.mapping, function (node, callback) {
+var setFailedStreams = function (map, pryvUser, serviceAccount, streams, error) {
+  MapUtils.syncBfExecutor(map, function (node) {
     if (MapUtils.isActiveNode(node)) {
       if (streams instanceof Array) {
         if (_.indexOf(streams, node.id) !== -1) {
@@ -186,13 +211,10 @@ var setFailedStreams = function (map, pryvUser, serviceAccount, streams, error, 
         delete node.updateCurrent;
         node.error = streams[node.id];
       }
-      callback(true);
+      return true;
     } else {
-      callback(false);
+      return false;
     }
-  }, function () {
-    db.updateServiceAccount(pryvUser, serviceAccount, function () {
-      callback();
-    });
   });
+  db.updateServiceAccount(pryvUser, serviceAccount, function () {});
 };
