@@ -31,7 +31,6 @@ var PryvBridge = function (appId) {
   this.map = null;
 
 
-
   config.set('service:name', appId);
 
   this.db = require('./provider/UserProvider.js')();

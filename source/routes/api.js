@@ -13,7 +13,6 @@ var ip = require('../provider/IdentityProvider.js');
 var up = require('../provider/UserProvider.js')();
 
 
-
 router.get('/api/domain', function (req, res) {
   return res.send({
     pryvDomain: utils.getPryvDomain(),
