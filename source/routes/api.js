@@ -3,7 +3,7 @@
  * @module routes/api
  */
 
-var Bridge = require('../Bridge.js')();
+var Bridge = require('../Bridge.js');
 var bridge = new Bridge();
 
 var express = require('express');
@@ -13,7 +13,7 @@ var config = require('../utils/config.js');
 var utils = require('../utils/utils.js');
 
 var ip = require('../provider/IdentityProvider.js');
-var UserProvider = require('../provider/UserProvider.js')();
+var UserProvider = require('../provider/UserProvider.js');
 var up = new UserProvider();
 
 

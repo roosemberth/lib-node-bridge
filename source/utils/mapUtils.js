@@ -4,7 +4,9 @@
  * @param fn function (node, callback = function (success))
  * @param callback
  */
-var bfExecutor = function (tree, fn, callback) {
+var  mapUtils = module.exports = {};
+
+mapUtils.bfTraversal = function (tree, fn, callback) {
   var instanceCounter = 0;
 
   var bfs = function (node) {
@@ -40,7 +42,7 @@ var bfExecutor = function (tree, fn, callback) {
 };
 
 
-var syncBfExecutor = function (tree, fn) {
+mapUtils.bfTraversalSync = function (tree, fn) {
 
   var bfs = function (node) {
     if (node) {
@@ -69,21 +71,21 @@ var syncBfExecutor = function (tree, fn) {
  * @param node from mapping
  * @returns {boolean}
  */
-var isActiveNode  = function (node) {
+mapUtils.isActiveNode  = function (node) {
   return node.active && (!node.error || (node.error && !node.error.id));
 };
 
 
-var clearAllErrors = function (map, callback) {
-  bfExecutor(map, function (node, callback) {
+mapUtils.clearAllErrors = function (map, callback) {
+  mapUtils.bfTraversal(map, function (node, callback) {
     delete node.error;
     callback(true);
   }, callback);
 };
 
-var updateUpdateTimestamp = function (map) {
-  syncBfExecutor(map, function (node) {
-    if (isActiveNode(node)) {
+mapUtils.updateUpdateTimestamp = function (map) {
+  mapUtils.bfTraversalSync(map, function (node) {
+    if (mapUtils.isActiveNode(node)) {
       if (node.updateCurrent) {
         if (!node.updateLast) {
           node.updateLast = node.updateCurrent;
@@ -98,6 +100,23 @@ var updateUpdateTimestamp = function (map) {
       return false;
     }
   });
+};
+
+
+mapUtils.validateMap = function (map) {
+  if (!map || map.length === 0) {
+    return false;
+  }
+  for (var i = 0, l = map.length; i < l; ++i) {
+    var res = validateStream(map[i]);
+    if (!res.valid) {
+      return res;
+    }
+  }
+  return {
+    valid: true,
+    error: null
+  };
 };
 
 
@@ -159,29 +178,4 @@ var validateEvent = function (event) {
     valid: valid,
     error: error
   };
-};
-
-var validateMap = function (map) {
-  if (!map || map.length === 0) {
-    return false;
-  }
-  for (var i = 0, l = map.length; i < l; ++i) {
-    var res = validateStream(map[i]);
-    if (!res.valid) {
-      return res;
-    }
-  }
-  return {
-    valid: true,
-    error: null
-  };
-};
-
-module.exports = {
-  bfExecutor: bfExecutor,
-  syncBfExecutor: syncBfExecutor,
-  isActiveNode: isActiveNode,
-  clearAllErrors: clearAllErrors,
-  updateUpdateTimestamp: updateUpdateTimestamp,
-  validateMap: validateMap
 };

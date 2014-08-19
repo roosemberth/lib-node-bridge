@@ -60,7 +60,7 @@ describe('Mapper', function () {
       var postMapGeneralDone = false;
 
       /* override the methods */
-      Mapper.prototype.preMapGeneral = function (callback) {
+      Mapper.prototype.preMapGeneral = function (gc, callback) {
         preMapGeneralDone = true;
         preMapGeneralDone.should.equal(true);
         preMapPryvDone.should.be.equal(false);
@@ -71,13 +71,14 @@ describe('Mapper', function () {
         postMapPryvDone.should.be.equal(false);
         postMapGeneralDone.should.be.equal(false);
 
+        gc.should.be.type('object');
         callback.should.be.type('function');
 
-        callback('preMapGeneral', null);
+        callback(null, 'preMapGeneral');
       };
 
 
-      Mapper.prototype.preMapPryv = function (pryvConnection, generalResult, callback) {
+      Mapper.prototype.preMapPryv = function (gc, pc, callback) {
         preMapPryvDone = true;
         preMapGeneralDone.should.be.equal(true);
         preMapPryvDone.should.be.equal(true);
@@ -88,14 +89,16 @@ describe('Mapper', function () {
         postMapPryvDone.should.be.equal(false);
         postMapGeneralDone.should.be.equal(false);
 
-        pryvConnection.should.be.an.instanceof(Pryv.Connection);
-        generalResult.should.be.equal('preMapGeneral');
+        gc.should.be.type('object');
+        gc.generalResult.should.be.equal('preMapGeneral');
+        pc.connection.should.be.an.instanceof(Pryv.Connection);
+        pc.account.should.be.type('object');
         callback.should.be.type('function');
 
-        callback('preMapPryv', null);
+        callback(null, 'preMapPryv');
       };
 
-      Mapper.prototype.preStreamCreation = function (accountContainer, pryvResult, generalResult, callback) {
+      Mapper.prototype.preStreamCreation = function (gc, pc, acc, callback) {
         console.log('Mapper.prototype.preStreamCreation');
         preStreamCreationDone = true;
         preMapGeneralDone.should.be.equal(true);
@@ -107,15 +110,18 @@ describe('Mapper', function () {
         postMapPryvDone.should.be.equal(false);
         postMapGeneralDone.should.be.equal(false);
 
-        accountContainer.should.be.an.instanceof(AccountContainer);
-        generalResult.should.be.equal('preMapGeneral');
-        pryvResult.should.be.equal('preMapPryv');
+        gc.should.be.type('object');
+        gc.generalResult.should.be.equal('preMapGeneral');
+        pc.connection.should.be.an.instanceof(Pryv.Connection);
+        pc.account.should.be.type('object');
+        pc.pryvResult.should.be.equal('preMapPryv');
+        acc.should.be.an.instanceof(AccountContainer);
         callback.should.be.type('function');
 
-        callback(null, null);
+        callback(null, 'preStreamCreation');
       };
 
-      Mapper.prototype.preMapService = function (accountContainer, pryvResult, generalResult, callback) {
+      Mapper.prototype.preMapService = function (gc, pc, acc, callback) {
         console.log('Mapper.prototype.preMapService');
 
         preMapServiceDone = true;
@@ -128,15 +134,19 @@ describe('Mapper', function () {
         postMapPryvDone.should.be.equal(false);
         postMapGeneralDone.should.be.equal(false);
 
-        accountContainer.should.be.an.instanceof(AccountContainer);
-        generalResult.should.be.equal('preMapGeneral');
-        pryvResult.should.be.equal('preMapPryv');
+        gc.should.be.type('object');
+        gc.generalResult.should.be.equal('preMapGeneral');
+        pc.connection.should.be.an.instanceof(Pryv.Connection);
+        pc.account.should.be.type('object');
+        pc.pryvResult.should.be.equal('preMapPryv');
+        acc.should.be.an.instanceof(AccountContainer);
+        acc.preStreamCreationResult.should.be.equal('preStreamCreation');
         callback.should.be.type('function');
 
-        callback(null, null);
+        callback(null, 'preMapService');
       };
 
-      Mapper.prototype.map = function (accountContainer, pryvResult, generalResult, callback) {
+      Mapper.prototype.map = function (gc, pc, acc, callback) {
         mapDone = true;
         preMapGeneralDone.should.be.equal(true);
         preMapPryvDone.should.be.equal(true);
@@ -147,16 +157,21 @@ describe('Mapper', function () {
         postMapPryvDone.should.be.equal(false);
         postMapGeneralDone.should.be.equal(false);
 
-        accountContainer.should.be.an.instanceof(AccountContainer);
-        generalResult.should.be.equal('preMapGeneral');
-        pryvResult.should.be.equal('preMapPryv');
+        gc.should.be.type('object');
+        gc.generalResult.should.be.equal('preMapGeneral');
+        pc.connection.should.be.an.instanceof(Pryv.Connection);
+        pc.account.should.be.type('object');
+        pc.pryvResult.should.be.equal('preMapPryv');
+        acc.should.be.an.instanceof(AccountContainer);
+        acc.preStreamCreationResult.should.be.equal('preStreamCreation');
+        acc.preMapServiceResult.should.be.equal('preMapService');
         callback.should.be.type('function');
 
-        callback(null, null);
+        callback(null, 'map');
       };
 
 
-      Mapper.prototype.postMapService = function (accountContainer, pryvResult, generalResult, callback) {
+      Mapper.prototype.postMapService = function (gc, pc, acc, callback) {
         postMapServiceDone = true;
         preMapGeneralDone.should.be.equal(true);
         preMapPryvDone.should.be.equal(true);
@@ -167,15 +182,21 @@ describe('Mapper', function () {
         postMapPryvDone.should.be.equal(false);
         postMapGeneralDone.should.be.equal(false);
 
-        accountContainer.should.be.an.instanceof(AccountContainer);
-        generalResult.should.be.equal('preMapGeneral');
-        pryvResult.should.be.equal('preMapPryv');
+        gc.should.be.type('object');
+        gc.generalResult.should.be.equal('preMapGeneral');
+        pc.connection.should.be.an.instanceof(Pryv.Connection);
+        pc.account.should.be.type('object');
+        pc.pryvResult.should.be.equal('preMapPryv');
+        acc.should.be.an.instanceof(AccountContainer);
+        acc.preStreamCreationResult.should.be.equal('preStreamCreation');
+        acc.preMapServiceResult.should.be.equal('preMapService');
+        acc.mapResult.should.be.equal('map');
         callback.should.be.type('function');
 
         callback(null, null);
       };
 
-      Mapper.prototype.postMapPryv = function (pryvConnection, pryvResult, generalResult, callback) {
+      Mapper.prototype.postMapPryv = function (gc, pc, callback) {
         postMapPryvDone = true;
         preMapGeneralDone.should.be.equal(true);
         preMapPryvDone.should.be.equal(true);
@@ -186,15 +207,17 @@ describe('Mapper', function () {
         postMapPryvDone.should.be.equal(true);
         postMapGeneralDone.should.be.equal(false);
 
-        pryvConnection.should.be.an.instanceof(Pryv.Connection);
-        generalResult.should.be.equal('preMapGeneral');
-        pryvResult.should.be.equal('preMapPryv');
+        gc.should.be.type('object');
+        gc.generalResult.should.be.equal('preMapGeneral');
+        pc.connection.should.be.an.instanceof(Pryv.Connection);
+        pc.account.should.be.type('object');
+        pc.pryvResult.should.be.equal('preMapPryv');
         callback.should.be.type('function');
 
         callback(null, null);
       };
 
-      Mapper.prototype.postMapGeneral = function (generalResult, callback) {
+      Mapper.prototype.postMapGeneral = function (gc, callback) {
         postMapGeneralDone = true;
         preMapGeneralDone.should.be.equal(true);
         preMapPryvDone.should.be.equal(true);
@@ -205,7 +228,8 @@ describe('Mapper', function () {
         postMapPryvDone.should.be.equal(true);
         postMapGeneralDone.should.be.equal(true);
 
-        generalResult.should.be.equal('preMapGeneral');
+        gc.should.be.type('object');
+        gc.generalResult.should.be.equal('preMapGeneral');
         callback.should.be.type('function');
 
         callback(null, null);
@@ -218,10 +242,6 @@ describe('Mapper', function () {
           callback(account2);
         }
       });
-
-
-
-
 
       mapper.executeCron();
     });

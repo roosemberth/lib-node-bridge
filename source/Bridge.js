@@ -2,7 +2,7 @@ var server = require('./server.js');
 var app = require('./app.js');
 var config = require('./utils/config.js');
 var CronJob = require('cron').CronJob;
-var MapUtils = require('./utils/MapUtils.js');
+var MapUtils = require('./utils/mapUtils.js');
 
 var instance = null;
 
@@ -59,7 +59,7 @@ Bridge.prototype.addServiceAuthRoutes = function (authRoutes) {
  * Function to manage and verify map
  */
 Bridge.prototype.setPryvMap = function (map) {
-  var validation = MapUtils.validateMap(map);
+  var validation = mapUtils.validateMap(map);
   if (validation.valid) {
     this.map = map;
     return true;

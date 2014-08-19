@@ -5,10 +5,14 @@
  * @type {exports}
  */
 
-var Pryv = require('pryv');
+var pryv = require('pryv');
 var utils = require('../utils/utils.js');
 var AccountContainer = require('./AccountContainer.js');
 var async = require('async');
+
+
+// error then result. !!!
+// use context
 
 
 /**
@@ -17,48 +21,50 @@ var async = require('async');
  * @param database and instance of UserProvider
  * @constructor
  */
-var Mapper = function (database) {
+var Mapper = module.exports = function (database) {
   this.database = database;
 };
 
 /**
  * Called exactly once when the cron is activated
- * @param callback function(result, error)
+ * @param generalContext empty object
+ * @param callback function(error, result)
  */
-Mapper.prototype.preMapGeneral = function (callback) {
+Mapper.prototype.preMapGeneral = function (generalContext, callback) {
   callback(null, null);
 };
 
 /**
  * Called for each Pryv account before the map function is called on the Pryv/Service account pairs.
- * @param pryvConnection instance of Pryv.Connection
- * @param generalResult the result returned by preMapGeneral()
- * @param callback function(result, error)
+ * @param pryvContext contains an instance of Pryv.Connection
+ * @param generalContexts the result returned by preMapGeneral()
+ * @param callback function(error, result)
  */
-Mapper.prototype.preMapPryv = function (pryvConnection, generalResult, callback) {
+Mapper.prototype.preMapPryv = function (generalContext, pryvContext, callback) {
   callback(null, null);
 };
 
 /**
  * Called once before each Pryv/Service account pairs stream creation function is called
  * @param accountContainer instance of AccountContainer
- * @param pryvResult the result returned by preMapPryv()
- * @param generalResult the result returned by preMapGeneral()
- * @param callback function(result, error)
+ * @param pryvContext the result returned by preMapPryv()
+ * @param generalContext the result returned by preMapGeneral()
+ * @param callback function(error, result)
  */
 Mapper.prototype.preStreamCreation =
-  function (accountContainer, pryvResult, generalResult, callback) {
-    callback(null, null);
-  };
+  function (generalContext, pryvContext, accountContainer, callback) {
+  callback(null, null);
+};
 
 /**
  * Called once before each Pryv/Service account pairs map function is called
  * @param accountContainer instance of AccountContainer
  * @param pryvResult the result returned by preMapPryv()
  * @param generalResult the result returned by preMapGeneral()
- * @param callback function(result, error)
+ * @param callback function(error, result)
  */
-Mapper.prototype.preMapService = function (accountContainer, pryvResult, generalResult, callback) {
+Mapper.prototype.preMapService =
+  function (generalContext, pryvContext, accountContainer, callback) {
   callback(null, null);
 };
 
@@ -67,9 +73,9 @@ Mapper.prototype.preMapService = function (accountContainer, pryvResult, general
  * @param accountContainer instance of AccountContainer
  * @param pryvResult the result returned by preMapPryv()
  * @param generalResult the result returned by preMapGeneral()
- * @param callback function(result, error)
+ * @param callback function(error, result)
  */
-Mapper.prototype.map = function (accountContainer, pryvResult, generalResult, callback) {
+Mapper.prototype.map = function (generalContext, pryvContext, accountContainer, callback) {
   throw new Error('Unimplemented method: Mapper.map()');
 };
 
@@ -78,9 +84,10 @@ Mapper.prototype.map = function (accountContainer, pryvResult, generalResult, ca
  * @param accountContainer instance of AccountContainer
  * @param pryvResult the result returned by preMapPryv()
  * @param generalResult the result returned by preMapGeneral()
- * @param callback function(result, error)
+ * @param callback function(error, result)
  */
-Mapper.prototype.postMapService = function (accountContainer, pryvResult, generalResult, callback) {
+Mapper.prototype.postMapService =
+  function (generalContext, pryvContext, accountContainer, callback) {
   callback(null, null);
 };
 
@@ -89,18 +96,18 @@ Mapper.prototype.postMapService = function (accountContainer, pryvResult, genera
  * @param pryvConnection an instance of Pryv.Connection
  * @param pryvResult the result returned by preMapPryv()
  * @param generalResult the result returned by preMapGeneral()
- * @param callback function(result, error)
+ * @param callback function(error, result)
  */
-Mapper.prototype.postMapPryv = function (pryvConnection, pryvResult, generalResult, callback) {
+Mapper.prototype.postMapPryv = function (generalContext, pryvContext, callback) {
   callback(null, null);
 };
 
 /**
  * Called at the very end, when all map functions have been called.
  * @param generalResult the result returned by preMapGeneral()
- * @param callback function(result, error)
+ * @param callback function(error, result)
  */
-Mapper.prototype.postMapGeneral = function (generalResult, callback) {
+Mapper.prototype.postMapGeneral = function (generalContext, callback) {
   callback(null, null);
 };
 
@@ -110,43 +117,48 @@ Mapper.prototype.postMapGeneral = function (generalResult, callback) {
  */
 Mapper.prototype.executeCron = function () {
   var that = this;
-  that.preMapGeneral(function (generalResult, error) {
+  var generalContext = {};
+  that.preMapGeneral(generalContext, function (error, generalResult) {
     if (error) {
       return;
     }
+    generalContext.generalResult = generalResult;
     var accountCounter = 0;
     that.database.forEachAccount(function (account) {
 
-      var pryvAccount = account.pryv;
-      var connection = new Pryv.Connection({
-        username: pryvAccount.user,
-        auth: pryvAccount.token,
-        staging: utils.isStaging()
-      });
+      var pryvContext = {
+        account: account.pryv,
+        connection: new pryv.Connection({
+          username: account.pryv.user,
+          auth: account.pryv.token,
+          staging: utils.isStaging()
+        })
+      };
 
-      that.preMapPryv(connection, generalResult, function (pryvResult, error) {
+      that.preMapPryv(generalContext, pryvContext, function (error, pryvResult) {
         if (error) {
           return;
         }
         accountCounter++;
         var service = account.service;
-
         var mappers = [];
+        pryvContext.pryvResult = pryvResult;
 
         for (var i = 0; i < service.accounts.length; ++i) {
-          console.warn('launching for', pryvAccount.user, service.accounts[i].aid);
-          var currentAccount = new AccountContainer(pryvAccount, service.accounts[i], connection);
-          var fn = createPreStreamCreationFunctions(that,
-            connection, currentAccount, pryvResult, generalResult);
+          console.warn('launching for', pryvContext.account.user, service.accounts[i].aid);
+          var currentAccount = new AccountContainer(
+            pryvContext.account, service.accounts[i], pryvContext.connection);
+          var fn = createPreStreamCreationFunctions(
+            that, generalContext, pryvContext, currentAccount);
           mappers.push(fn);
         }
 
         async.parallel(mappers, function () {
           accountCounter--;
-          that.postMapPryv(connection, pryvResult, generalResult, function () {
-            console.log('Mapped all accounts of', pryvAccount.user);
+          that.postMapPryv(generalContext, pryvContext, function () {
+            console.log('Mapped all accounts of', pryvContext.account.user);
             if (accountCounter === 0) {
-              that.postMapGeneral(generalResult, function () {
+              that.postMapGeneral(generalContext, function () {
                 console.log('Cronjob done.');
               });
             }
@@ -157,25 +169,29 @@ Mapper.prototype.executeCron = function () {
   });
 };
 
-var createPreStreamCreationFunctions = function (that, connection,
-  currentAccount, pryvResult, generalResult) {
+var createPreStreamCreationFunctions =
+  function (that, generalContext, pryvContext, currentAccount) {
   return function (done) {
-    that.preStreamCreation(currentAccount, pryvResult, generalResult,
-      function (result, error) {
+    that.preStreamCreation(generalContext, pryvContext, currentAccount,
+      function (error, result) {
+        currentAccount.preStreamCreationResult = result;
         if (error) {
           return done();
         }
-
         currentAccount.createStreams(function () {
-          that.preMapService(currentAccount, pryvResult, generalResult,
-            function (result, error) {
+          that.preMapService(generalContext, pryvContext, currentAccount,
+            function (error, result) {
+              currentAccount.preMapServiceResult = result;
               if (error) {
                 return done();
               }
-              that.map(currentAccount, pryvResult, generalResult, function () {
-                that.postMapService(currentAccount, pryvResult, generalResult, function () {
-                  return done();
-                });
+              that.map(generalContext, pryvContext, currentAccount, function (error, result) {
+                currentAccount.mapResult = result;
+                that.postMapService(generalContext, pryvContext, currentAccount,
+                  function (error, result) {
+                    currentAccount.postMapServiceResult = result;
+                    return done();
+                  });
               });
             }
           );
@@ -184,6 +200,3 @@ var createPreStreamCreationFunctions = function (that, connection,
     );
   };
 };
-
-
-module.exports = Mapper;
