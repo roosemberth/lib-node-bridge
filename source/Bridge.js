@@ -1,9 +1,8 @@
-
 var server = require('./server.js');
 var app = require('./app.js');
 var config = require('./utils/config.js');
 var CronJob = require('cron').CronJob;
-var validateMap = require('./utils/map-validation.js');
+var MapUtils = require('./utils/MapUtils.js');
 
 var instance = null;
 
@@ -38,12 +37,9 @@ Bridge.prototype.start = function () {
   }.bind(this), 10000);
 };
 
-
-// use as var e = require('myEndpoint.js'); pb.addServiceEndpoints(e);
 Bridge.prototype.addServiceEndpoints = function (endpoints) {
   app.use('/', endpoints);
 };
-
 
 /**
  * Auth routes and strategy
@@ -63,7 +59,7 @@ Bridge.prototype.addServiceAuthRoutes = function (authRoutes) {
  * Function to manage and verify map
  */
 Bridge.prototype.setPryvMap = function (map) {
-  var validation = validateMap(map);
+  var validation = MapUtils.validateMap(map);
   if (validation.valid) {
     this.map = map;
     return true;

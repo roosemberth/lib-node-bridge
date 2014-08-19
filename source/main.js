@@ -1,4 +1,3 @@
-
 module.exports = {
   Bridge: require('./Bridge.js'),
   MapUtils: require('./utils/MapUtils.js'),
