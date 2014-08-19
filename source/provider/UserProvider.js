@@ -455,5 +455,23 @@ UserProvider.prototype.forEachUser = function (fn) {
   });
 };
 
+/**
+ * Iterates over all documents and execute fn for each tuple
+ * (pryvAccount, serviceAccount)
+ * @param fn the execute function (account)
+ */
+UserProvider.prototype.forEachAccount = function (fn) {
+  userDb.collection(config.get('database:userCollection'), function (error, collection) {
+    var cursor = collection.find();
+    cursor.each(function (err, item) {
+      if (item !== null) {
+        fn(item);
+      } else {
+        console.warn('launching for nobody, since collection is empty');
+      }
+    });
+  });
+};
+
 
 module.exports = UserProvider;

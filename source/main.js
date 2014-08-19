@@ -24,16 +24,17 @@ var PryvBridge = function (appId) {
     return new PryvBridge(appId);
   }
 
+  config.set('service:name', appId);
+
   this.passport = require('passport');
   this.config = config;
   this.utils = require('./utils/utils.js');
-
-  this.map = null;
-
-
-  config.set('service:name', appId);
-
   this.db = require('./provider/UserProvider.js')();
+  this.map = null;
+  this.mapper = null;
+  this.schedule = null;
+  this.job = null;
+
 };
 
 PryvBridge.prototype.start = function () {
@@ -42,19 +43,6 @@ PryvBridge.prototype.start = function () {
     this.job.start();
   }.bind(this), 10000);
 };
-
-
-// Authentication for Pryv
-PryvBridge.prototype.authPryv = function () {
-};
-
-// Authentication for Service
-PryvBridge.prototype.addService = function () {
-};
-
-PryvBridge.prototype.addServiceRoutes = function (path, callback) {
-};
-
 
 
 // use as var e = require('myEndpoint.js'); pb.addServiceEndpoints(e);
@@ -77,27 +65,6 @@ PryvBridge.prototype.addServiceAuthRoutes = function (authRoutes) {
   app.use('/', authRoutes);
 };
 
-
-/**
- * Set base paths for includes
- */
-PryvBridge.prototype.setBasePath = function (basePath) {
-  config.set('ui:pathprefix', basePath);
-};
-
-PryvBridge.prototype.setViewSigninPath = function (signinPath) {
-  config.set('ui:views:signin', signinPath);
-};
-
-PryvBridge.prototype.setViewConfigurePath = function (confPath) {
-  config.set('ui:views:configure', confPath);
-};
-
-PryvBridge.prototype.setViewJsControlerPath = function (ctrlPath) {
-  config.set('ui:js:controller', ctrlPath);
-};
-
-
 /**
  * Function to manage and verify map
  */
@@ -112,41 +79,17 @@ PryvBridge.prototype.setPryvMap = function (map) {
   }
 };
 
-
 /**
  * Mapper function setting with its scheduling
  * @param schedule  A cron schedule
  * @param mapper    A mapping function (pryvAccount, serviceAccount)
  */
 PryvBridge.prototype.setMapper = function (schedule, mapper) {
+  this.schedule = schedule;
   this.mapper = mapper;
-
-  var doStuff = function () {
-    this.db.forEachUser(function (pryvAcc, serviceAcc) {
-      var accCtnr = new AccountContainer(pryvAcc, serviceAcc);
-      accCtnr.createStreams(function () {
-        mapper(accCtnr);
-      }.bind(this));
-    }.bind(this));
-  };
-
-  if (config.get('refresh')) {
-    app.use('/',
-      router.get('/api/refresh/:secret', function (req, res) {
-        var secret = req.params.secret;
-        console.log(secret, config.get('refresh'));
-        if (secret === config.get('refresh')) {
-          console.warn('Launched Mapper: force');
-          this.db.forEachUser(mapper);
-        }
-        return res.send(404);
-      }.bind(this))
-    );
-  }
-
   this.job = new CronJob({
-    cronTime: schedule,
-    onTick: doStuff,
+    cronTime: this.schedule,
+    onTick: this.mapper.executeCron,
     start: false,
     context: this
   });
@@ -157,5 +100,6 @@ module.exports = {
   PryvBridge: PryvBridge,
   MapUtils: require('./utils/MapUtils.js'),
   Database: require('./provider/UserProvider.js'),
-  Config: require('./utils/config.js')
+  Config: require('./utils/config.js'),
+  Mapper: require('./gateway/Mapper.js')
 };

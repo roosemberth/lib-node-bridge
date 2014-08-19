@@ -5,15 +5,18 @@ var db = require('../provider/UserProvider.js')();
 var MapUtils = require('../utils/MapUtils.js');
 
 
-module.exports = function (pryvAccount, serviceAccount) {
+module.exports = function (pryvAccount, serviceAccount, connection) {
   this.pryvAccount = pryvAccount;
   this.serviceAccount = serviceAccount;
-  this.connection = new Pryv.Connection({
-    username: pryvAccount.user,
-    auth: pryvAccount.token,
-    staging: utils.isStaging()
-  });
-
+  if (connection) {
+    this.connection = connection;
+  } else {
+    this.connection = new Pryv.Connection({
+      username: pryvAccount.user,
+      auth: pryvAccount.token,
+      staging: utils.isStaging()
+    });
+  }
   /**
    * Creates the streams recursively if active and not having an error
    * @param {function} callback called when done
@@ -26,9 +29,7 @@ module.exports = function (pryvAccount, serviceAccount) {
             if (!node.id) {
               var stream2create = _.pick(node, 'name', 'parentId');
               this.connection.streams.create(stream2create, function (error, stream) {
-                //console.log(error);
                 if (error && error.id === 'item-already-exists') {
-
                   var parentId = typeof(node.parentId) === 'undefined' ? null : node.parentId;
                   var streams = null;
 
@@ -37,10 +38,7 @@ module.exports = function (pryvAccount, serviceAccount) {
                   } else {
                     streams = this.connection.datastore.getStreams();
                   }
-
-                  //console.log('to find\t', node.name, parentId);
                   for (var i = 0, l = streams.length; i < l; ++i) {
-                    //console.log('current\t', streams[i].name, streams[i].parentId);
                     if (streams[i].name === node.name &&
                       streams[i].parentId === parentId) {
                       stream = streams[i];
@@ -49,11 +47,9 @@ module.exports = function (pryvAccount, serviceAccount) {
                     }
                   }
                 }
-                //console.log(error, stream);
 
                 if (!error) {
                   node.id = stream.id;
-                  //console.log(node.error, node.id);
                   for (var j = 0, ln = node.streams.length; j < ln; ++j) {
                     node.streams[j].parentId = node.id;
                   }
@@ -62,6 +58,7 @@ module.exports = function (pryvAccount, serviceAccount) {
                   return callback(false);
                 } else {
                   node.error = error;
+
                   return callback(false);
                 }
               }.bind(this));
@@ -81,6 +78,8 @@ module.exports = function (pryvAccount, serviceAccount) {
             callback();
           });
         }.bind(this));
+      } else {
+        return callback(error, null);
       }
     }.bind(this));
   };
