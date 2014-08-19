@@ -3,6 +3,8 @@
  * @module routes/api
  */
 
+var Bridge = require('../Bridge.js')();
+
 var express = require('express');
 var router = express.Router();
 
@@ -147,6 +149,47 @@ router.post('/api/config/:account', function (req, res) {
   }
 });
 
+
+/**
+ * Removes a service account associated to pryvUsername
+ */
+router.delete('/api/config/:account', function (req, res) {
+  var account = req.params.account;
+  if (!req.session.pryv || (req.session.pryv && !req.session.pryv.user)) {
+    return res.send(401);
+  } else if (!req.body) {
+    return res.send(400);
+  } else {
+    var pryvUsername = req.session.pryv.user;
+    up.removeServiceAccount(pryvUsername, account, function (error) {
+      if (error) {
+        res.statusCode = 400;
+        return res.json(error);
+      } else {
+        return res.send(200);
+      }
+    });
+  }
+});
+
+
+router.get('/api/refresh/:secret', function (req, res) {
+  if (config.get('refresh')) {
+    var secret = req.params.secret;
+    console.log(secret, config.get('refresh'));
+    if (secret === config.get('refresh')) {
+      if(Bridge.mapper.executeCron) {
+        console.warn('[SUCCESS] Manual trigger of cron execution.');
+        Bridge.mapper.executeCron();
+      } else {
+        console.error('[FAIL] Manual trigger of cron execution.');
+      }
+    }
+  }
+  return res.send(404);
+});
+
+
 module.exports = router;
 
 
@@ -159,7 +202,7 @@ var mergeSelectedValues = function (accOrigin, accRcv) {
         if (curRcv.uid === accOrigin[io].uid) {
           curOrig.name = curRcv.name;
           curOrig.active = curRcv.active;
-         mergeSelectedValues(curOrig.streams, curRcv.streams);
+          mergeSelectedValues(curOrig.streams, curRcv.streams);
         }
       }
     }
