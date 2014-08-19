@@ -44,10 +44,12 @@ var UserProvider = function () {
  * Inserts a new user into the database
  * @param pryvUsername
  * @param pryvData
- * @param serviceData
+ * @param serviceSettings
+ * @param serviceAccounts
  * @param callback function(error, record)
  */
-UserProvider.prototype.insertUser = function (pryvUsername, pryvData, serviceSettings, serviceAccounts, callback) {
+UserProvider.prototype.insertUser = function (
+  pryvUsername, pryvData, serviceSettings, serviceAccounts, callback) {
   userDb.collection(config.get('database:userCollection'), function (error, collection) {
     if (!pryvUsername) {
       if (typeof(callback) === 'function') {
@@ -85,6 +87,7 @@ UserProvider.prototype.insertUser = function (pryvUsername, pryvData, serviceSet
 /**
  * Removes an user
  * @param pryvUsername
+ * @param callback
  */
 UserProvider.prototype.removeUser = function (pryvUsername, callback) {
   if (!pryvUsername) {
@@ -205,7 +208,7 @@ UserProvider.prototype.setService = function (pryvUsername, service, callback) {
 /**
  * Replaces the old service settings by the new one and return the new service settings
  * @param pryvUsername
- * @param service the new service object
+ * @param serviceSettings the new service object
  * @param callback function(error, serviceSettings)
  */
 UserProvider.prototype.setServiceSettings = function (pryvUsername, serviceSettings, callback) {
@@ -408,7 +411,7 @@ UserProvider.prototype.getServiceUser = function (serviceUserId, callback) {
 
 /**
  * This function stores a service user account in a the Service User Table.
- * @param id the service user id
+ * @param serviceUserId the service user id
  * @param user the user details and tokens
  * @param callback
  */

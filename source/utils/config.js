@@ -2,7 +2,6 @@
 
 var logger = require('winston');
 var fs = require('fs');
-var os = require('os');
 var nconf = require('nconf');
 
 // Exports

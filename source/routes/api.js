@@ -4,6 +4,7 @@
  */
 
 var Bridge = require('../Bridge.js')();
+var bridge = new Bridge();
 
 var express = require('express');
 var router = express.Router();
@@ -12,7 +13,8 @@ var config = require('../utils/config.js');
 var utils = require('../utils/utils.js');
 
 var ip = require('../provider/IdentityProvider.js');
-var up = require('../provider/UserProvider.js')();
+var UserProvider = require('../provider/UserProvider.js')();
+var up = new UserProvider();
 
 
 router.get('/api/domain', function (req, res) {
@@ -73,7 +75,7 @@ router.post('/login/pryv', function (req, res) {
 
       up.getUser(username, function (error, user) {
         if (error || !user) { // might be dangerous, creating a second account
-          up.insertUser(username, {user: username, token: token}, null, null, function (error, user) {
+          up.insertUser(username, {user: username, token: token}, null, null, function (error) {
             if (error) {
               res.send(500);
             } else {
@@ -178,9 +180,9 @@ router.get('/api/refresh/:secret', function (req, res) {
     var secret = req.params.secret;
     console.log(secret, config.get('refresh'));
     if (secret === config.get('refresh')) {
-      if(Bridge.mapper.executeCron) {
+      if(bridge.mapper.executeCron) {
         console.warn('[SUCCESS] Manual trigger of cron execution.');
-        Bridge.mapper.executeCron();
+        bridge.mapper.executeCron();
       } else {
         console.error('[FAIL] Manual trigger of cron execution.');
       }

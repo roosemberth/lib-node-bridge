@@ -15,15 +15,5 @@ module.exports = {
   },
   isStaging: function () {
     return (config.get('pryvdomain') === 'pryv.in' || config.get('pryvdomain') === 'rec.la');
-  },
-  validateMap: function (map) {
-    if (!map || map.length === 0) {
-      return false;
-    }
-    for (var i = 0, l = map.length; i < l; ++i) {
-
-    }
-
-    return true;
   }
 };

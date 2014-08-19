@@ -1,15 +1,29 @@
+/**
+ * All callback in here are of the form function(result, error)
+ * if error is set, the subsequent hook-function chain is broken eg.
+ * execution is stopped.
+ * @type {exports}
+ */
+
 var Pryv = require('pryv');
 var utils = require('../utils/utils.js');
 var AccountContainer = require('./AccountContainer.js');
 var async = require('async');
 
+
+/**
+ * Constructor of the mapper, pass and instance of UserProvider to it.
+ * Extend it to use the hooks.
+ * @param database and instance of UserProvider
+ * @constructor
+ */
 var Mapper = function (database) {
   this.database = database;
 };
 
 /**
  * Called exactly once when the cron is activated
- * @param callback
+ * @param callback function(result, error)
  */
 Mapper.prototype.preMapGeneral = function (callback) {
   callback(null, null);
@@ -17,9 +31,9 @@ Mapper.prototype.preMapGeneral = function (callback) {
 
 /**
  * Called for each Pryv account before the map function is called on the Pryv/Service account pairs.
- * @param pryvAccount
- * @param generalResult
- * @param callback
+ * @param pryvConnection instance of Pryv.Connection
+ * @param generalResult the result returned by preMapGeneral()
+ * @param callback function(result, error)
  */
 Mapper.prototype.preMapPryv = function (pryvConnection, generalResult, callback) {
   callback(null, null);
@@ -27,10 +41,10 @@ Mapper.prototype.preMapPryv = function (pryvConnection, generalResult, callback)
 
 /**
  * Called once before each Pryv/Service account pairs stream creation function is called
- * @param accountContainer
- * @param generalResult
- * @param pryvResult
- * @param callback
+ * @param accountContainer instance of AccountContainer
+ * @param pryvResult the result returned by preMapPryv()
+ * @param generalResult the result returned by preMapGeneral()
+ * @param callback function(result, error)
  */
 Mapper.prototype.preStreamCreation =
   function (accountContainer, pryvResult, generalResult, callback) {
@@ -39,10 +53,10 @@ Mapper.prototype.preStreamCreation =
 
 /**
  * Called once before each Pryv/Service account pairs map function is called
- * @param accountContainer
- * @param generalResult
- * @param pryvResult
- * @param callback
+ * @param accountContainer instance of AccountContainer
+ * @param pryvResult the result returned by preMapPryv()
+ * @param generalResult the result returned by preMapGeneral()
+ * @param callback function(result, error)
  */
 Mapper.prototype.preMapService = function (accountContainer, pryvResult, generalResult, callback) {
   callback(null, null);
@@ -50,8 +64,10 @@ Mapper.prototype.preMapService = function (accountContainer, pryvResult, general
 
 /**
  * Is called for each Pryv/Service account pair, should be the mapper function
- * @param accountContainer
- * @param callback
+ * @param accountContainer instance of AccountContainer
+ * @param pryvResult the result returned by preMapPryv()
+ * @param generalResult the result returned by preMapGeneral()
+ * @param callback function(result, error)
  */
 Mapper.prototype.map = function (accountContainer, pryvResult, generalResult, callback) {
   throw new Error('Unimplemented method: Mapper.map()');
@@ -59,8 +75,10 @@ Mapper.prototype.map = function (accountContainer, pryvResult, generalResult, ca
 
 /**
  * Is called just after the map function was called.
- * @param accountContainer
- * @param callback
+ * @param accountContainer instance of AccountContainer
+ * @param pryvResult the result returned by preMapPryv()
+ * @param generalResult the result returned by preMapGeneral()
+ * @param callback function(result, error)
  */
 Mapper.prototype.postMapService = function (accountContainer, pryvResult, generalResult, callback) {
   callback(null, null);
@@ -68,8 +86,10 @@ Mapper.prototype.postMapService = function (accountContainer, pryvResult, genera
 
 /**
  * Called after all map functions for a Pryv account have been called
- * @param pryvAccount
- * @param callback
+ * @param pryvConnection an instance of Pryv.Connection
+ * @param pryvResult the result returned by preMapPryv()
+ * @param generalResult the result returned by preMapGeneral()
+ * @param callback function(result, error)
  */
 Mapper.prototype.postMapPryv = function (pryvConnection, pryvResult, generalResult, callback) {
   callback(null, null);
@@ -77,7 +97,8 @@ Mapper.prototype.postMapPryv = function (pryvConnection, pryvResult, generalResu
 
 /**
  * Called at the very end, when all map functions have been called.
- * @param callback
+ * @param generalResult the result returned by preMapGeneral()
+ * @param callback function(result, error)
  */
 Mapper.prototype.postMapGeneral = function (generalResult, callback) {
   callback(null, null);
@@ -115,7 +136,8 @@ Mapper.prototype.executeCron = function () {
         for (var i = 0; i < service.accounts.length; ++i) {
           console.warn('launching for', pryvAccount.user, service.accounts[i].aid);
           var currentAccount = new AccountContainer(pryvAccount, service.accounts[i], connection);
-          var fn = createPreStreamCreationFunctions(that, connection, currentAccount, pryvResult, generalResult);
+          var fn = createPreStreamCreationFunctions(that,
+            connection, currentAccount, pryvResult, generalResult);
           mappers.push(fn);
         }
 

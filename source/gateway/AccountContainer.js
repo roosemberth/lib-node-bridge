@@ -1,7 +1,8 @@
 var Pryv = require('pryv');
 var _ = require('underscore');
 var utils = require('../utils/utils.js');
-var db = require('../provider/UserProvider.js')();
+var UserProvider = require('../provider/UserProvider.js');
+var db = new UserProvider();
 var MapUtils = require('../utils/MapUtils.js');
 
 
