@@ -2,11 +2,11 @@ var server = require('./server.js');
 var app = require('./app.js');
 var config = require('./utils/config.js');
 var CronJob = require('cron').CronJob;
-var MapUtils = require('./utils/mapUtils.js');
+var mapUtils = require('./utils/mapUtils.js');
 
 var instance = null;
 
-var Bridge = function (appId) {
+var Bridge = module.exports = function (appId) {
   if (instance) {
     return instance;
   }
@@ -84,5 +84,3 @@ Bridge.prototype.setMapper = function (schedule, mapper) {
     context: this
   });
 };
-
-module.exports = Bridge;

@@ -16,7 +16,7 @@ var dbClientInstance = null;
  * @returns {*} the instance
  * @constructor
  */
-var UserProvider = function () {
+var UserProvider = module.exports = function () {
   if (dbClientInstance) {
     return dbClientInstance;
   }
@@ -475,6 +475,3 @@ UserProvider.prototype.forEachAccount = function (fn) {
     });
   });
 };
-
-
-module.exports = UserProvider;

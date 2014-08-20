@@ -1,7 +1,7 @@
 module.exports = {
   Bridge: require('./Bridge.js'),
-  MapUtils: require('./utils/mapUtils.js'),
   Database: require('./provider/UserProvider.js'),
-  Config: require('./utils/config.js'),
-  Mapper: require('./gateway/Mapper.js')
+  Mapper: require('./gateway/Mapper.js'),
+  config: require('./utils/config.js'),
+  mapUtils: require('./utils/mapUtils.js')
 };
