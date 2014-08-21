@@ -176,17 +176,17 @@ module.exports = function (mapper) {
   router.get('/api/refresh/:secret', function (req, res) {
     if (config.get('refresh')) {
       var secret = req.params.secret;
-      console.log(secret, config.get('refresh'));
       if (secret === config.get('refresh')) {
-        if (mapper.executeCron) {
-          console.warn('[SUCCESS] Manual trigger of cron execution.');
+        try {
           mapper.executeCron();
-        } else {
-          console.error('[FAIL] Manual trigger of cron execution.');
+        } catch (e) {
+          console.error('[FAIL] Manual trigger of cron execution.', e);
+          return res.send(404);
         }
+        console.warn('[SUCCESS] Manual trigger of cron execution.');
       }
+      return res.send(404);
     }
-    return res.send(404);
   });
 
 

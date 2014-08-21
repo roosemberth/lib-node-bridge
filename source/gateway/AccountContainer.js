@@ -23,10 +23,10 @@ var AccountContainer = module.exports = function (pryvAccount, serviceAccount, c
  * Creates the streams recursively if active and not having an error
  * @param {function} callback called when done
  */
-AccountContainer.createStreams = function (callback) {
+AccountContainer.prototype.createStreams = function (callback) {
   this.connection.fetchStructure(function (error) {
     if (!error) {
-      mapUtils.bfExecutor(this.serviceAccount.mapping, function (node, callback) {
+      mapUtils.bfTraversal(this.serviceAccount.mapping, function (node, callback) {
         if (mapUtils.isActiveNode(node)) {
           if (!node.id) {
             var stream2create = _.pick(node, 'name', 'parentId');
@@ -93,7 +93,7 @@ AccountContainer.createStreams = function (callback) {
  * @param {Array} events of Pryv's event-like
  * @param {function} callback called when done
  */
-AccountContainer.batchCreateEvents = function (events, callback) {
+AccountContainer.prototype.batchCreateEvents = function (events, callback) {
 
   if (typeof(callback) !== 'function') {
     callback = function () {
@@ -103,6 +103,7 @@ AccountContainer.batchCreateEvents = function (events, callback) {
   if (!events || (events && events.length === 0)) {
     mapUtils.updateUpdateTimestamp(this.serviceAccount.mapping);
     db.updateServiceAccount(this.pryvAccount.user, this.serviceAccount);
+    console.log('batchCreateEvents 1');
     return callback();
   }
 
@@ -123,6 +124,7 @@ AccountContainer.batchCreateEvents = function (events, callback) {
     streams: streams,
     sortAscending: true
   }, function (error, ev) {
+    console.log(error);
     if (!error) {
 
       var notFound = [];
@@ -148,7 +150,16 @@ AccountContainer.batchCreateEvents = function (events, callback) {
       }
 
       if (notFound.length !== 0) {
+        console.log('batchWithData before');
+        var called = false;
         return this.connection.events.batchWithData(notFound, function (error, results) {
+          if(!called) {
+            called = true;
+          } else {
+            return;
+          }
+          console.log('batchWithData after');
+
           // Manage all the errors
           if (!error) {
 
@@ -168,10 +179,12 @@ AccountContainer.batchCreateEvents = function (events, callback) {
             mapUtils.updateUpdateTimestamp(this.serviceAccount.mapping);
             return db.updateServiceAccount(this.pryvAccount.user, this.serviceAccount,
               function () {
+                console.log('batchCreateEvents 2');
                 return callback();
               });
 
           } else {
+            console.log('batchCreateEvents 3', error);
             if (error.id === 'API_UNREACHEABLE') {
               error = null;
             }
@@ -179,6 +192,7 @@ AccountContainer.batchCreateEvents = function (events, callback) {
             // set error and reset last update on the node.
             setFailedStreams(this.serviceAccount.mapping, this.pryvAccount.user,
               this.serviceAccount, streams, error);
+
             return callback();
           }
         }.bind(this));
@@ -193,6 +207,7 @@ AccountContainer.batchCreateEvents = function (events, callback) {
       // set error and reset last update on the node.
       setFailedStreams(this.serviceAccount.mapping, this.pryvAccount.user,
         this.serviceAccount, streams, error);
+      console.log('batchCreateEvents 4');
       return callback();
     }
 
@@ -217,6 +232,5 @@ var setFailedStreams = function (map, pryvUser, serviceAccount, streams, error) 
       return false;
     }
   });
-  db.updateServiceAccount(pryvUser, serviceAccount, function () {
-  });
+  db.updateServiceAccount(pryvUser, serviceAccount, function () {});
 };

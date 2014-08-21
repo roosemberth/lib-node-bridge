@@ -1,3 +1,5 @@
+var _ = require('underscore');
+
 /**
  * All callback in here are of the form function(result, error)
  * if error is set, the subsequent hook-function chain is broken eg.
@@ -26,11 +28,33 @@ var Mapper = module.exports = function (database) {
 };
 
 /**
+ *
+ * @param constructor
+ * @param members
+ */
+Mapper.implement = function (constructor, members) {
+  var newImplementation = constructor;
+
+  if (typeof Object.create === 'undefined') {
+    Object.create = function (prototype) {
+      function C() { }
+      C.prototype = prototype;
+      return new C();
+    };
+  }
+  newImplementation.prototype = Object.create(this.prototype);
+  _.extend(newImplementation.prototype, members);
+  newImplementation.implement = this.implement;
+  return newImplementation;
+};
+
+/**
  * Called exactly once when the cron is activated
  * @param generalContext empty object
  * @param callback function(error, result)
  */
 Mapper.prototype.preMapGeneral = function (generalContext, callback) {
+  console.warn('Mapper.prototype.preMapGeneral');
   callback(null, null);
 };
 
@@ -41,6 +65,7 @@ Mapper.prototype.preMapGeneral = function (generalContext, callback) {
  * @param callback function(error, result)
  */
 Mapper.prototype.preMapPryv = function (generalContext, pryvContext, callback) {
+  console.warn('Mapper.prototype.preMapPryv');
   callback(null, null);
 };
 
@@ -53,7 +78,8 @@ Mapper.prototype.preMapPryv = function (generalContext, pryvContext, callback) {
  */
 Mapper.prototype.preStreamCreation =
   function (generalContext, pryvContext, accountContainer, callback) {
-  callback(null, null);
+    console.warn('Mapper.prototype.preStreamCreation');
+    callback(null, null);
 };
 
 /**
@@ -65,7 +91,8 @@ Mapper.prototype.preStreamCreation =
  */
 Mapper.prototype.preMapService =
   function (generalContext, pryvContext, accountContainer, callback) {
-  callback(null, null);
+    console.warn('Mapper.prototype.preMapService');
+    callback(null, null);
 };
 
 /**
@@ -88,7 +115,8 @@ Mapper.prototype.map = function (generalContext, pryvContext, accountContainer, 
  */
 Mapper.prototype.postMapService =
   function (generalContext, pryvContext, accountContainer, callback) {
-  callback(null, null);
+    console.warn('Mapper.prototype.postMapService');
+    callback(null, null);
 };
 
 /**
@@ -99,6 +127,7 @@ Mapper.prototype.postMapService =
  * @param callback function(error, result)
  */
 Mapper.prototype.postMapPryv = function (generalContext, pryvContext, callback) {
+  console.warn('Mapper.prototype.postMapPryv');
   callback(null, null);
 };
 
@@ -108,6 +137,7 @@ Mapper.prototype.postMapPryv = function (generalContext, pryvContext, callback) 
  * @param callback function(error, result)
  */
 Mapper.prototype.postMapGeneral = function (generalContext, callback) {
+  console.warn('Mapper.prototype.postMapGeneral');
   callback(null, null);
 };
 
@@ -116,6 +146,8 @@ Mapper.prototype.postMapGeneral = function (generalContext, callback) {
  * This is the cronjob.
  */
 Mapper.prototype.executeCron = function () {
+  console.warn('Mapper.prototype.executeCron');
+
   var that = this;
   var generalContext = {};
   that.preMapGeneral(generalContext, function (error, generalResult) {
@@ -178,7 +210,8 @@ var createPreStreamCreationFunctions =
         if (error) {
           return done();
         }
-        currentAccount.createStreams(function () {
+        currentAccount.createStreams(function (err) {
+          console.log(err);
           that.preMapService(generalContext, pryvContext, currentAccount,
             function (error, result) {
               currentAccount.preMapServiceResult = result;
@@ -187,6 +220,7 @@ var createPreStreamCreationFunctions =
               }
               that.map(generalContext, pryvContext, currentAccount, function (error, result) {
                 currentAccount.mapResult = result;
+                console.log(error);
                 that.postMapService(generalContext, pryvContext, currentAccount,
                   function (error, result) {
                     currentAccount.postMapServiceResult = result;

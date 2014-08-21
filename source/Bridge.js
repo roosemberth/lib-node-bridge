@@ -3,6 +3,7 @@ var app = require('./app.js');
 var config = require('./utils/config.js');
 var CronJob = require('cron').CronJob;
 var mapUtils = require('./utils/mapUtils.js');
+var apiRoute = require('./routes/api.js');
 
 var instance = null;
 
@@ -31,11 +32,11 @@ var Bridge = module.exports = function (appId) {
 };
 
 Bridge.prototype.start = function () {
-  app.use('/', require('./routes/api.js')(this.mapper));
+  app.use('/', apiRoute(this.mapper));
   server();
   setTimeout(function () {
     this.job.start();
-  }.bind(this), 10000);
+  }.bind(this), 1000);
 };
 
 
@@ -58,32 +59,28 @@ Bridge.prototype.addServiceAuthRoutes = function (authRoutes) {
   app.use('/', authRoutes);
 };
 
-/**
- * Function to manage and verify map
- */
-Bridge.prototype.setPryvMap = function (map) {
-  var validation = mapUtils.validateMap(map);
-  if (validation.valid) {
-    this.map = map;
-    return true;
-  } else {
-    console.log(validation.error);
-    throw new Error(validation.error);
-  }
-};
+
 
 /**
  * Mapper function setting with its scheduling
  * @param schedule  A cron schedule
  * @param mapper    A mapping function (pryvAccount, serviceAccount)
+ * @param map       Datastruct
  */
-Bridge.prototype.setMapper = function (schedule, mapper) {
+Bridge.prototype.setMapper = function (schedule, mapper, map) {
+  var validation = mapUtils.validateMap(map);
+  if (!validation.valid) {
+    throw new Error(validation.error);
+  }
+
+  this.map = map;
   this.schedule = schedule;
   this.mapper = mapper;
   this.job = new CronJob({
     cronTime: this.schedule,
     onTick: this.mapper.executeCron,
     start: false,
-    context: this
+    context: this.mapper
   });
+  return true;
 };

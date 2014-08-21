@@ -17,7 +17,6 @@ var app = module.exports = express();
 /**
  * Configuration
  */
-  console.warn('conf', config.get('database'));
 // Session
 var sessionConfig = {
   store: new MongoStore({

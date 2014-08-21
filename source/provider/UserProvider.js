@@ -365,7 +365,6 @@ UserProvider.prototype.removeServiceAccount = function (pryvUsername, accountId,
       var foundId = -1;
       var accounts = [];
       for (var i = 0; i < service.accounts.length; ++i) {
-        console.log(service.accounts[i].aid, accountId);
         if (service.accounts[i].aid.toString() !== accountId) {
           accounts.push(service.accounts[i]);
         } else {
