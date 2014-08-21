@@ -16,7 +16,9 @@ module.exports = function () {
   };
 
   var server = https.createServer(sslOptions, app).listen(app.get('port'), function() {
-
+  console.log('mongodb://' + config.get('database:host') + ':' +
+    config.get('database:port') + '/' + config.get('database:name') +
+    '/' + config.get('database:pryvSessionCollection'));
     var address = server.address();
     var protocol = server.key ? 'https' : 'http';
     console.log('Server running on ' + protocol + '://' +  config.get('pryvdomain') + ':' +

@@ -31,15 +31,18 @@ var Bridge = module.exports = function (appId) {
 };
 
 Bridge.prototype.start = function () {
+  app.use('/', require('./routes/api.js')(this.mapper));
   server();
   setTimeout(function () {
     this.job.start();
   }.bind(this), 10000);
 };
 
+
 Bridge.prototype.addServiceEndpoints = function (endpoints) {
   app.use('/', endpoints);
 };
+
 
 /**
  * Auth routes and strategy

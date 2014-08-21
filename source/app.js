@@ -17,6 +17,7 @@ var app = module.exports = express();
 /**
  * Configuration
  */
+  console.warn('conf', config.get('database'));
 // Session
 var sessionConfig = {
   store: new MongoStore({
@@ -60,6 +61,5 @@ app.use(session(sessionConfig));
 /**
  * Routes
  */
-app.use('/', require('./routes/api.js'));
 app.use('/', require('./routes/index.js'));
 app.use('/', require('./routes/service-ui.js'));

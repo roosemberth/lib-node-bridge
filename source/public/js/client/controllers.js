@@ -8,10 +8,11 @@ var i = 0;
 
 angular.module('pryvBridge.controllers', []).
   controller('AppCtrl', function ($scope, $http) {
-
+    console.log('AppCtrl');
   }).
   controller('SigninPryvCtrl', ['$scope', '$rootScope', '$http', '$location',
     function ($scope, $rootScope, $http, $location) {
+      console.log('SigninPryvCtrl');
 
 
       var requestedPermissions = [{
@@ -82,7 +83,7 @@ angular.module('pryvBridge.controllers', []).
           $rootScope.pryvDomain = data.pryvDomain;
           $rootScope.pryvStaging = data.pryvStaging;
           $rootScope.appId = data.appId;
-          loadAppData(data.appId, data.pryvStaging)
+          loadAppData(data.appId, data.pryvStaging);
           if ($rootScope.pryvDomain === 'rec.la' ||
             $rootScope.pryvDomain === 'pryv.in') {
             pryv.Auth.config.registerURL = { host: 'reg.pryv.in', 'ssl': true};
@@ -124,11 +125,11 @@ angular.module('pryvBridge.controllers', []).
             }
           }
         });
-      }
+      };
 
   }]).
-  controller('OverviewCtrl', ['$scope', '$rootScope', '$http', '$location',
-    function ($scope, $rootScope, $http, $location) {
+  controller('OverviewCtrl', ['$scope', '$rootScope', '$http', '$location', '$window',
+    function ($scope, $rootScope, $http, $location, $window) {
     // $rootScope.pryv mean loggedIn
     if ($rootScope.pryv) {
       $http({
@@ -147,10 +148,7 @@ angular.module('pryvBridge.controllers', []).
 
 
       $scope.addAccount = function () {
-        _.defer(function ($rs, $l) {
-          $l.path('/signin-service');
-          $rs.$apply();
-        }, $rootScope, $location);
+        $window.location.href = '/auth/service';
       };
 
       $scope.editAccount = function (aid) {
@@ -161,11 +159,10 @@ angular.module('pryvBridge.controllers', []).
       };
       $scope.removeAccount = function (aid) {
         if (aid) {
-          var confirmRemove = window.confirm('Are you sure you want to remove this account?');
+          var confirmRemove = $window.confirm('Are you sure you want to remove this account?');
           if (confirmRemove) {
             $http({ method: 'DELETE',
-                    url : 'remove/misfit',
-                    params: {pryvUsername: $rootScope.pryv.username, accountId: aid}
+                    url : '/api/config/' + aid
             }).success(function () {
                 $scope.accounts = _.filter($scope.accounts, function (account) {
                   return account.aid !== aid;

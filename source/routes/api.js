@@ -15,6 +15,7 @@ var up = new UserProvider();
 
 
 module.exports = function (mapper) {
+
   router.get('/api/domain', function (req, res) {
     return res.send({
       pryvDomain: utils.getPryvDomain(),
@@ -136,7 +137,6 @@ module.exports = function (mapper) {
       up.getServiceAccount(pryvUsername, data.aid, function (error, account) {
         if (!error) {
           mergeSelectedValues(account.mapping, data.mapping);
-          //console.log('account.mapping', account.mapping);
           up.updateServiceAccount(pryvUsername, account, function (error) {
             if (!error) {
               return res.send(200);

@@ -16,7 +16,7 @@
                 <td class="status error" ng-show="!!acc.critical"><i class="glyphicon glyphicon-warning-sign"></i> Error</td>
                 <td class="status enabled" ng-show="!acc.critical && !!acc.enabled"><i class="glyphicon glyphicon-ok-sign"></i> Enabled</td>
                 <td class="status disabled" ng-show="!acc.critical && !acc.enabled"><i class="glyphicon glyphicon-minus-sign"></i> Disabled</td>
-                <td>{{ acc.profile.username || acc.profile.email }}</td>
+                <td>{{ acc.profile.username || acc.profile.email || acc.aid }}</td>
                 <td><a href="" ng-click="editAccount(acc.aid)"><i class="glyphicon glyphicon-cog"></i></a></td>
                 <td><a href="" ng-click="removeAccount(acc.aid)"><i class="glyphicon glyphicon-trash"></i></a></td>
               </tr>

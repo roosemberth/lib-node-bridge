@@ -15,11 +15,12 @@ router.get('/signin-pryv', function(req, res) {
 });
 
 router.get('/signin-service', function(req, res) {
-  res.sendfile(index);
+  res.send(301, '/auth/service');
+  //res.sendfile(index);
 });
 
 router.get('/views/signin-service.html', function(req, res) {
-  res.sendfile(path.join(config.get('ui:pathprefix'), config.get('ui:views:signin')));
+  res.send(301, '/auth/service');
 });
 
 router.get('/configure', function(req, res) {

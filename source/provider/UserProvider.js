@@ -365,13 +365,16 @@ UserProvider.prototype.removeServiceAccount = function (pryvUsername, accountId,
       var foundId = -1;
       var accounts = [];
       for (var i = 0; i < service.accounts.length; ++i) {
-        if (service.accounts[i].aid !== accountId) {
+        console.log(service.accounts[i].aid, accountId);
+        if (service.accounts[i].aid.toString() !== accountId) {
           accounts.push(service.accounts[i]);
         } else {
+          console.log(service.accounts[i].aid);
           foundId = i;
         }
       }
-      if (service.accounts[foundId].aid === accountId) {
+      if (foundId >= 0 &&
+        service.accounts[foundId].aid.toString() === accountId) {
         service.accounts = accounts;
       } else {
         return callback('Account to remove not found', null);
