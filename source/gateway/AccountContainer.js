@@ -120,13 +120,12 @@ AccountContainer.prototype.batchCreateEvents = function (events, callback) {
   // Fetch the events in the same range to avoid duplicates.
   this.connection.events.get({
     fromTime: oldest,
-    toTime: youngest,
+    toTime: youngest + 1,
     streams: streams,
-    sortAscending: true
+    sortAscending: false
   }, function (error, ev) {
     console.log(error);
     if (!error) {
-
       var notFound = [];
       for (var i = 0, l = events.length; i < l; ++i) {
         var found = false;
@@ -134,13 +133,14 @@ AccountContainer.prototype.batchCreateEvents = function (events, callback) {
           if (events[i].time === ev[j].time &&
             events[i].streamId === ev[j].streamId &&
             events[i].type === ev[j].type) {
-            if (events[i].duration && ev[j].duration &&
-              events[i].duration === ev[j].duration) {
-              if (events[i].content && ev[j].content &&
-                events[i].content === ev[j].content) {
+            if (events[i].duration && ev[j].duration) {
+              if (events[i].duration === ev[j].duration) {
                 found = true;
                 break;
               }
+            } else {
+              found = true;
+              break;
             }
           }
         }
@@ -149,20 +149,14 @@ AccountContainer.prototype.batchCreateEvents = function (events, callback) {
         }
       }
 
-      if (notFound.length !== 0) {
-        console.log('batchWithData before');
-        var called = false;
-        return this.connection.events.batchWithData(notFound, function (error, results) {
-          if(!called) {
-            called = true;
-          } else {
-            return;
-          }
-          console.log('batchWithData after');
+      console.log('ev.length', ev.length);
+      console.log('events.length', events.length);
+      console.log('notFound.length', notFound.length);
 
+      if (notFound.length !== 0) {
+        return this.connection.events.batchWithData(notFound, function (error, results) {
           // Manage all the errors
           if (!error) {
-
             // We should traverse results, detect the error and set the map
             // error.
             streams = {};
@@ -171,7 +165,6 @@ AccountContainer.prototype.batchCreateEvents = function (events, callback) {
                 streams[notFound[i].streamId] = results[i].error;
               }
             }
-
             // In this case we failed to push some the events and
             // will set error and reset last update on the node.
             setFailedStreams(this.serviceAccount.mapping, this.pryvAccount.user,
@@ -179,12 +172,9 @@ AccountContainer.prototype.batchCreateEvents = function (events, callback) {
             mapUtils.updateUpdateTimestamp(this.serviceAccount.mapping);
             return db.updateServiceAccount(this.pryvAccount.user, this.serviceAccount,
               function () {
-                console.log('batchCreateEvents 2');
                 return callback();
               });
-
           } else {
-            console.log('batchCreateEvents 3', error);
             if (error.id === 'API_UNREACHEABLE') {
               error = null;
             }
@@ -192,7 +182,6 @@ AccountContainer.prototype.batchCreateEvents = function (events, callback) {
             // set error and reset last update on the node.
             setFailedStreams(this.serviceAccount.mapping, this.pryvAccount.user,
               this.serviceAccount, streams, error);
-
             return callback();
           }
         }.bind(this));
@@ -207,7 +196,6 @@ AccountContainer.prototype.batchCreateEvents = function (events, callback) {
       // set error and reset last update on the node.
       setFailedStreams(this.serviceAccount.mapping, this.pryvAccount.user,
         this.serviceAccount, streams, error);
-      console.log('batchCreateEvents 4');
       return callback();
     }
 
