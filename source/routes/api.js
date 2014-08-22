@@ -181,12 +181,11 @@ module.exports = function (mapper) {
           mapper.executeCron();
         } catch (e) {
           console.error('[FAIL] Manual trigger of cron execution.', e);
-          return res.send(404);
         }
         console.warn('[SUCCESS] Manual trigger of cron execution.');
       }
-      return res.send(404);
     }
+    return res.send(404);
   });
 
 
