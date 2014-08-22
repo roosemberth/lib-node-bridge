@@ -175,9 +175,9 @@ AccountContainer.prototype.batchCreateEvents = function (events, callback) {
                 return callback();
               });
           } else {
-            if (error.id === 'API_UNREACHEABLE') {
-              error = null;
-            }
+            //if (error.id === 'API_UNREACHEABLE') {
+            //  error = null;
+            //}
             // In this case we failed to push the events and
             // set error and reset last update on the node.
             setFailedStreams(this.serviceAccount.mapping, this.pryvAccount.user,
@@ -187,11 +187,12 @@ AccountContainer.prototype.batchCreateEvents = function (events, callback) {
         }.bind(this));
       } else {
         mapUtils.updateUpdateTimestamp(this.serviceAccount.mapping);
+        return callback();
       }
     } else {
-      if (error.id === 'API_UNREACHEABLE') {
-        error = null;
-      }
+      //if (error.id === 'API_UNREACHEABLE') {
+      //  error = null;
+      //}
       // In this case we failed to fetch the events and
       // set error and reset last update on the node.
       setFailedStreams(this.serviceAccount.mapping, this.pryvAccount.user,
