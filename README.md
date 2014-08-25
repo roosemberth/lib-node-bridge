@@ -33,6 +33,7 @@ You have to extend SdkBridge.Mapper implement some functions and pass set it in 
 The map defines the stream/event structure used at Pryv to store the data from your integrated service.
 
 A streams is defined by:
+
     {
       name:                    String   The name of the stream to create/use
       id:                      String   Its associated stream Id
@@ -51,6 +52,7 @@ A streams is defined by:
     }
 
 A event is defined by:
+
     {
       uid:      String          A unique identifier for the node 
       name:     String          Some given name
@@ -64,10 +66,12 @@ A event is defined by:
 
 ### Setup the Authentication
 The must be at least one route to initiate the login procedure
+
     router.get('/auth/service', pryvBridge.passport.authenticate('service') ,function() {});
 
 
 ### server.js
+
     /*
      * AUTHENTICATION CONFIGURATION: Passport
      */
