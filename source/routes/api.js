@@ -20,7 +20,8 @@ module.exports = function (mapper) {
     return res.send({
       pryvDomain: utils.getPryvDomain(),
       pryvStaging: utils.isStaging(),
-      appId: config.get('service:name')
+      appId: config.get('service:appId'),
+      appName: config.get('service:appName')
     });
   });
 

@@ -7,7 +7,7 @@ var apiRoute = require('./routes/api.js');
 
 var instance = null;
 
-var Bridge = module.exports = function (appId) {
+var Bridge = module.exports = function (appName, appId) {
   if (instance) {
     return instance;
   }
@@ -15,11 +15,12 @@ var Bridge = module.exports = function (appId) {
   if (this instanceof Bridge) {
     instance = this;
   } else {
-    return new Bridge(appId);
+    return new Bridge(appName, appId);
   }
 
-  if (appId && appId.length !== 0) {
-    config.set('service:name', appId);
+  if (appId && appId.length !== 0 && appName && appName.length !== 0) {
+    config.set('service:name', appName);
+    config.set('service:appId', appId);
   }
 
   this.passport = require('passport');

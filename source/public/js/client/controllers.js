@@ -139,7 +139,8 @@ angular.module('pryvBridge.controllers', []).
         }).
           success(function (data, status, headers, config) {
             console.log('OverviewCtrl.success', data, status, headers, config);
-            $scope.name = data.name;
+            $scope.serviceName = data.name;
+            $scope.appId = data.appId;
             $scope.accounts = data.accounts;
           }).
           error(function (data, status, headers, config) {

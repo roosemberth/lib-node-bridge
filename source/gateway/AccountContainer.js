@@ -30,6 +30,20 @@ AccountContainer.prototype.createStreams = function (callback) {
         if (mapUtils.isActiveNode(node)) {
           if (!node.id) {
             var stream2create = _.pick(node, 'name', 'parentId');
+            if (node.baseStreamIdOnServiceId) {
+              stream2create.name = node.name;
+              stream2create.id = node.name.toLowerCase() + '-' + this.serviceAccount.aid;
+
+              try {
+                var res = this.connection.datastore.getStreamById(stream2create.id);
+                node.id = res.id;
+                for (var j = 0, ln = node.streams.length; j < ln; ++j) {
+                  node.streams[j].parentId = node.id;
+                  return callback(true);
+                }
+              } catch (e) {}
+            }
+
             this.connection.streams.create(stream2create, function (error, stream) {
               if (error && error.id === 'item-already-exists') {
                 var parentId = typeof(node.parentId) === 'undefined' ? null : node.parentId;

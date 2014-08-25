@@ -211,7 +211,6 @@ var createPreStreamCreationFunctions =
           return done();
         }
         currentAccount.createStreams(function (err) {
-          console.log(err);
           that.preMapService(generalContext, pryvContext, currentAccount,
             function (error, result) {
               currentAccount.preMapServiceResult = result;
@@ -220,7 +219,6 @@ var createPreStreamCreationFunctions =
               }
               that.map(generalContext, pryvContext, currentAccount, function (error, result) {
                 currentAccount.mapResult = result;
-                console.log(error);
                 that.postMapService(generalContext, pryvContext, currentAccount,
                   function (error, result) {
                     currentAccount.postMapServiceResult = result;
