@@ -185,7 +185,7 @@ module.exports = function (mapper) {
         console.warn('[SUCCESS] Manual trigger of cron execution.');
       }
     }
-    return res.send(404);
+    return res.send(404, 'Cannot GET /api/refresh/' + req.params.secret);
   });
 
 

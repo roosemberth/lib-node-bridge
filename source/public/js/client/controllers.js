@@ -4,10 +4,8 @@
 'use strict';
 
 /* Controllers */
-var i = 0;
-
 angular.module('pryvBridge.controllers', []).
-  controller('AppCtrl', function ($scope, $http) {
+  controller('AppCtrl', function () {
     console.log('AppCtrl');
   }).
   controller('SigninPryvCtrl', ['$scope', '$rootScope', '$http', '$location',
@@ -15,10 +13,12 @@ angular.module('pryvBridge.controllers', []).
       console.log('SigninPryvCtrl');
 
 
-      var requestedPermissions = [{
+      var requestedPermissions = [
+        {
           'streamId': '*',
           'level': 'manage'
-      }];
+        }
+      ];
 
       // Pryv Login dialog configuration //
       var settings = {
@@ -26,9 +26,12 @@ angular.module('pryvBridge.controllers', []).
         returnURL: '', // set this if you don't want a popup
         spanButtonID: 'loginWithPryv', // (optional)
         callbacks: {
-          initialization: function () {},
-          needSignin: function () {},
-          needValidation: function () {},
+          initialization: function () {
+          },
+          needSignin: function () {
+          },
+          needValidation: function () {
+          },
           signedIn: function (connection, languageCode) {
             var username = connection.username;
             var appToken = connection.auth;
@@ -42,13 +45,13 @@ angular.module('pryvBridge.controllers', []).
             };
 
             $http.post('/login/pryv', $rootScope.pryv)
-              .success(function() {
+              .success(function () {
                 _.defer(function ($rs, $l) {
                   $l.path('/overview');
                   $rs.$apply();
                 }, $rootScope, $location);
               })
-              .error(function() {
+              .error(function () {
                 _.defer(function ($rs, $l) {
                   $l.path('/signin-pryv');
                   $rs.$apply();
@@ -102,7 +105,6 @@ angular.module('pryvBridge.controllers', []).
         });
 
 
-
       var loadAppData = function (appId, staging) {
         var url;
         if (staging) {
@@ -127,54 +129,239 @@ angular.module('pryvBridge.controllers', []).
         });
       };
 
-  }]).
+    }]).
   controller('OverviewCtrl', ['$scope', '$rootScope', '$http', '$location', '$window',
     function ($scope, $rootScope, $http, $location, $window) {
-    // $rootScope.pryv mean loggedIn
-    if ($rootScope.pryv) {
-      $http({
-        method: 'GET',
-        url: '/api/overview'
-      }).
-        success(function (data, status, headers, config) {
-          console.log('OverviewCtrl.success', data, status, headers, config);
-          $scope.name = data.name;
-          $scope.accounts = data.accounts;
+      // $rootScope.pryv mean loggedIn
+      if ($rootScope.pryv) {
+        $http({
+          method: 'GET',
+          url: '/api/overview'
         }).
-        error(function (data, status, headers, config) {
-          console.log('OverviewCtrl.error', data, status, headers, config);
-          $scope.name = 'Error!';
-        });
+          success(function (data, status, headers, config) {
+            console.log('OverviewCtrl.success', data, status, headers, config);
+            $scope.name = data.name;
+            $scope.accounts = data.accounts;
+          }).
+          error(function (data, status, headers, config) {
+            console.log('OverviewCtrl.error', data, status, headers, config);
+            $scope.name = 'Error!';
+          });
 
 
-      $scope.addAccount = function () {
-        $window.location.href = '/auth/service';
-      };
+        $scope.addAccount = function () {
+          $window.location.href = '/auth/service';
+        };
 
-      $scope.editAccount = function (aid) {
-        _.defer(function ($rs, $l) {
-          $l.path('/configure/' + aid);
-          $rs.$apply();
-        }, $rootScope, $location);
-      };
-      $scope.removeAccount = function (aid) {
-        if (aid) {
-          var confirmRemove = $window.confirm('Are you sure you want to remove this account?');
-          if (confirmRemove) {
-            $http({ method: 'DELETE',
-                    url : '/api/config/' + aid
-            }).success(function () {
+        $scope.editAccount = function (aid) {
+          _.defer(function ($rs, $l) {
+            $l.path('/configure/' + aid);
+            $rs.$apply();
+          }, $rootScope, $location);
+        };
+        $scope.removeAccount = function (aid) {
+          if (aid) {
+            var confirmRemove = $window.confirm('Are you sure you want to remove this account?');
+            if (confirmRemove) {
+              $http({ method: 'DELETE',
+                url: '/api/config/' + aid
+              }).success(function () {
                 $scope.accounts = _.filter($scope.accounts, function (account) {
                   return account.aid !== aid;
                 });
               });
+            }
+          }
+        };
+      } else {
+        _.defer(function ($rs, $l) {
+          $l.path('/signin-pryv/');
+          $rs.$apply();
+        }, $rootScope, $location);
+      }
+    }]).module.controller('ConfigureCtrl', ['$scope', '$rootScope',
+    '$location', '$http', '$routeParams',
+    function ($scope, $rootScope, $location, $http, $routeParams) {
+      if ($rootScope.pryv) {
+        $scope.useSiUnits = false;
+        $scope.errors = [];
+        $scope.loading = {
+          running: true,
+          error: null
+        };
+
+        var pushDetails = function () {
+          $http({
+            method: 'POST',
+            url: '/api/config/' + $routeParams.aid,
+            data: JSON.stringify({
+              aid: $scope.aid,
+              mapping: $scope.mapping,
+              enabled: $scope.enabled
+            })
+          }).
+            success(function (data, status, headers, config) {
+              console.log('ConfigureCtrl.success', data, status, headers, config);
+            }).
+            error(function (data, status, headers, config) {
+              console.log('ConfigureCtrl.error', data, status, headers, config);
+            });
+        };
+
+        var pullDetails = function () {
+          $scope.loading.running = true;
+          $http({
+            method: 'GET',
+            url: '/api/config/' + $routeParams.aid
+          }).
+            success(function (data, status, headers, config) {
+              $scope.loading.running = false;
+              console.log('ConfigureCtrl.success', data, status, headers, config);
+              $scope.aid = data.aid;
+              $scope.mapping = data.mapping;
+              $scope.enabled = data.enabled;
+              $scope.critical = data.critical;
+              $scope.message = data.message;
+              $scope.profile = data.profile;
+              extractErrors();
+              detectSiUsage();
+            }).
+            error(function (data, status, headers, config) {
+              $scope.loading.error = 'There was an error loading the account details';
+              console.log('ConfigureCtrl.error', data, status, headers, config);
+              $scope.name = 'Error!';
+            });
+        };
+
+        $scope.switchToSI = function (useSi) {
+          bfTraversal($scope.mapping, function (node) {
+            if (node.events) {
+              for (var i = 0, l = node.events.length; i < l; ++i) {
+                if (node.events[i].availableTypes &&
+                  node.events[i].availableTypes.length >= 0) {
+
+                  for (var j = 0; j < node.events[i].availableTypes.length; ++j) {
+                    if (useSi) {
+                      if (unitIsSi(node.events[i].availableTypes[j])) {
+                        node.events[i].type = node.events[i].availableTypes[j];
+                        break;
+                      }
+                    } else {
+                      if (!unitIsSi(node.events[i].availableTypes[j])) {
+                        node.events[i].type = node.events[i].availableTypes[j];
+                        break;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            return true;
+          });
+        };
+
+        var extractErrors = function () {
+          bfTraversal($scope.mapping, function (node) {
+            if (node.error && node.error.id) {
+              $scope.errors.push({
+                uid: node.uid,
+                error: node.error
+              });
+            }
+            return true;
+          });
+        };
+
+        var detectSiUsage = function () {
+          bfTraversal($scope.mapping, function (node) {
+            if (node.events) {
+              for (var i = 0, l = node.events.length; i < l; ++i) {
+                if (node.events[i].availableTypes &&
+                  node.events[i].availableTypes.length >= 0) {
+                  if (unitIsSi(node.events[i].type)) {
+                    $scope.useSiUnits = true;
+                    return true;
+                  } else {
+                    return false;
+                  }
+                }
+              }
+            }
+            return true;
+          });
+        };
+
+        $scope.clearErrorInNode = function (error) {
+          var uid = error.uid;
+          bfTraversal($scope.mapping, function (node) {
+            if (node.uid === uid) {
+              if (node.error.id === 'unknown-referenced-resource') {
+                node.id = '';
+                node.error = {
+                  id: null,
+                  message: null
+                };
+              }
+              return false;
+            }
+            return true;
+          });
+          pushDetails();
+        };
+
+
+        /*
+         * Button functions
+         */
+        $scope.buttonConfirm = function () {
+          pushDetails();
+        };
+        $scope.buttonCancel = function () {
+          _.defer(function ($rs, $l) {
+            $l.path('/overview');
+            $rs.$apply();
+          }, $rootScope, $location);
+        };
+
+
+        pullDetails();
+        console.log('Configure Controller loaded!');
+      } else {
+        _.defer(function ($rs, $l) {
+          $l.path('/signin-pryv/');
+          $rs.$apply();
+        }, $rootScope, $location);
+      }
+    }]);
+
+
+var bfTraversal = function (tree, fn) {
+
+  var bfs = function (node) {
+    if (node) {
+      if (fn(node)) {
+        if (node.streams && node.streams.length) {
+          for (var i = 0, l = node.streams.length; i < l; ++i) {
+            bfs(node.streams[i]);
           }
         }
-      };
-    } else {
-      _.defer(function ($rs, $l) {
-        $l.path('/signin-pryv/');
-        $rs.$apply();
-      }, $rootScope, $location);
+      }
     }
-  }]);
+  };
+
+  if (tree instanceof Array) {
+    for (var i = 0, l = tree.length; i < l; ++i) {
+      bfs(tree[i]);
+    }
+  } else {
+    return bfs(tree);
+  }
+};
+
+
+var unitIsSi = function (type) {
+  switch (type) {
+    case 'length/km': return true;
+    default: return false;
+  }
+};
