@@ -271,8 +271,7 @@ UserProvider.prototype.getServiceAccount = function (pryvUsername, accountId, ca
   }
   this.getServiceAccounts(pryvUsername, function (error, accounts) {
     for( var i = 0; i < accounts.length; ++i) {
-      if (accounts[i].aid === accountId) {
-
+      if (accounts[i].aid.toString() === accountId.toString()) {
         return callback(null, accounts[i]);
       }
     }
@@ -293,7 +292,7 @@ UserProvider.prototype.addServiceAccount = function (pryvUsername, account, call
       return callback(err, null);
     } else {
       for (var i = 0; i < service.accounts.length; ++i) {
-        if (service.accounts[i].aid === account.aid) {
+        if (service.accounts[i].aid.toString() === account.aid.toString()) {
           return callback('Service Account already exists', null);
         }
       }
@@ -303,7 +302,7 @@ UserProvider.prototype.addServiceAccount = function (pryvUsername, account, call
           return callback(err, null);
         } else {
           for (var i = 0; i < service.accounts.length; ++i) {
-            if (service.accounts[i].aid === account.aid) {
+            if (service.accounts[i].aid.toString() === account.aid.toString()) {
               return callback(null, service.accounts[i]);
             }
           }
@@ -331,7 +330,7 @@ UserProvider.prototype.updateServiceAccount = function (pryvUsername, account, c
           return callback(err, null);
         } else {
           for (var i = 0; i < service.accounts.length; ++i) {
-            if (service.accounts[i].aid === account.aid) {
+            if (service.accounts[i].aid.toString() === account.aid.toString()) {
               return callback(null, service.accounts[i]);
             }
           }
@@ -339,7 +338,7 @@ UserProvider.prototype.updateServiceAccount = function (pryvUsername, account, c
         }
       };
       for (var i = 0; i < service.accounts.length; ++i) {
-        if (service.accounts[i].aid === account.aid) {
+        if (service.accounts[i].aid.toString() === account.aid.toString()) {
           service.accounts[i] = account;
           return that.setService(pryvUsername, service, fn);
         }
@@ -365,7 +364,7 @@ UserProvider.prototype.removeServiceAccount = function (pryvUsername, accountId,
       var foundId = -1;
       var accounts = [];
       for (var i = 0; i < service.accounts.length; ++i) {
-        if (service.accounts[i].aid.toString() !== accountId) {
+        if (service.accounts[i].aid.toString() !== accountId.toString()) {
           accounts.push(service.accounts[i]);
         } else {
           console.log(service.accounts[i].aid);
@@ -373,7 +372,7 @@ UserProvider.prototype.removeServiceAccount = function (pryvUsername, accountId,
         }
       }
       if (foundId >= 0 &&
-        service.accounts[foundId].aid.toString() === accountId) {
+        service.accounts[foundId].aid.toString() === accountId.toString()) {
         service.accounts = accounts;
       } else {
         return callback('Account to remove not found', null);

@@ -2,19 +2,18 @@
     <h1>Configure your account</h1>
 
 
-    <label ng-hide="!usesSI">
+    <label ng-hide="!siUnitsAvailable">
         <input type="checkbox" ng-change="switchToSI()" ng-model="useSiUnits"> Use SI units
     </label>
 
-    <ul class="list-group" ng-hide="errors.length === 0 || !loading.running">
+    <ul class="list-group" ng-hide="!showErrorList()">
         <li class="list-group-item" ng-repeat="error in errors">
             <span> The stream {{error.uid}} has encoutered an error: {{error.error.id}}</span>
             <button type="button" class="btn btn-default" ng-click="clearErrorInNode(error)">Fix!</button>
         </li>
     </ul>
 
-    <span ng-hide="errors.length !== 0 || loading.running"></span>
-
+    <p ng-hide="showErrorList()">No errors have been detected, your account runs error-free.</p>
 
     <button type="submit" class="btn btn-success pull-right" ng-click="buttonConfirm()">Confirm
     </button>

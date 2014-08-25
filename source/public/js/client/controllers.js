@@ -5,9 +5,9 @@
 
 /* Controllers */
 angular.module('pryvBridge.controllers', []).
-  controller('AppCtrl', function () {
+  controller('AppCtrl', [function () {
     console.log('AppCtrl');
-  }).
+  }]).
   controller('SigninPryvCtrl', ['$scope', '$rootScope', '$http', '$location',
     function ($scope, $rootScope, $http, $location) {
       console.log('SigninPryvCtrl');
@@ -128,7 +128,6 @@ angular.module('pryvBridge.controllers', []).
           }
         });
       };
-
     }]).
   controller('OverviewCtrl', ['$scope', '$rootScope', '$http', '$location', '$window',
     function ($scope, $rootScope, $http, $location, $window) {
@@ -179,15 +178,21 @@ angular.module('pryvBridge.controllers', []).
           $rs.$apply();
         }, $rootScope, $location);
       }
-    }]).module.controller('ConfigureCtrl', ['$scope', '$rootScope',
+    }]).
+  controller('ConfigureCtrl', ['$scope', '$rootScope',
     '$location', '$http', '$routeParams',
     function ($scope, $rootScope, $location, $http, $routeParams) {
       if ($rootScope.pryv) {
         $scope.useSiUnits = false;
+        $scope.siUnitsAvailable = false;
         $scope.errors = [];
         $scope.loading = {
           running: true,
           error: null
+        };
+
+        $scope.showErrorList = function () {
+          return $scope.errors.length !== 0 && !$scope.loading.running;
         };
 
         var pushDetails = function () {
@@ -225,6 +230,7 @@ angular.module('pryvBridge.controllers', []).
               $scope.profile = data.profile;
               extractErrors();
               detectSiUsage();
+              console.log('$scope.useSiUnits', $scope.useSiUnits, $scope.siUnitsAvailable);
             }).
             error(function (data, status, headers, config) {
               $scope.loading.error = 'There was an error loading the account details';
@@ -233,24 +239,22 @@ angular.module('pryvBridge.controllers', []).
             });
         };
 
-        $scope.switchToSI = function (useSi) {
+        $scope.switchToSI = function () {
           bfTraversal($scope.mapping, function (node) {
             if (node.events) {
               for (var i = 0, l = node.events.length; i < l; ++i) {
                 if (node.events[i].availableTypes &&
                   node.events[i].availableTypes.length >= 0) {
-
                   for (var j = 0; j < node.events[i].availableTypes.length; ++j) {
-                    if (useSi) {
-                      if (unitIsSi(node.events[i].availableTypes[j])) {
-                        node.events[i].type = node.events[i].availableTypes[j];
-                        break;
-                      }
-                    } else {
-                      if (!unitIsSi(node.events[i].availableTypes[j])) {
-                        node.events[i].type = node.events[i].availableTypes[j];
-                        break;
-                      }
+                    if ($scope.useSiUnits && unitIsSi(node.events[i].availableTypes[j])) {
+                      node.events[i].type = node.events[i].availableTypes[j];
+                      console.log('useSi && unitIsSi');
+                      break;
+                    } else if (!$scope.useSiUnits && !unitIsSi(node.events[i].availableTypes[j])) {
+                      node.events[i].type = node.events[i].availableTypes[j];
+                      console.log('!useSi && !unitIsSi');
+
+                      break;
                     }
                   }
                 }
@@ -276,13 +280,17 @@ angular.module('pryvBridge.controllers', []).
           bfTraversal($scope.mapping, function (node) {
             if (node.events) {
               for (var i = 0, l = node.events.length; i < l; ++i) {
+                if (unitIsSi(node.events[i].type)) {
+                  $scope.useSiUnits = true;
+                }
                 if (node.events[i].availableTypes &&
                   node.events[i].availableTypes.length >= 0) {
-                  if (unitIsSi(node.events[i].type)) {
-                    $scope.useSiUnits = true;
-                    return true;
-                  } else {
-                    return false;
+                  for (var j = 0; j < node.events[i].availableTypes.length; ++j) {
+                    if (unitIsSi(node.events[i].availableTypes[j])) {
+                      $scope.siUnitsAvailable = true;
+                      node.events[i].type = node.events[i].availableTypes[j];
+                      break;
+                    }
                   }
                 }
               }
@@ -361,7 +369,9 @@ var bfTraversal = function (tree, fn) {
 
 var unitIsSi = function (type) {
   switch (type) {
-    case 'length/km': return true;
-    default: return false;
+    case 'length/km':
+      return true;
+    default:
+      return false;
   }
 };

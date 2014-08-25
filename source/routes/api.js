@@ -96,7 +96,7 @@ module.exports = function (mapper) {
    * Returns the data for a specific account configuration
    */
   router.get('/api/config/:account', function (req, res) {
-    var account = req.params.account;
+    var account = req.params.account ? req.params.account.toString() : null;
     if (!req.session.pryv || (req.session.pryv && !req.session.pryv.user)) {
       res.send(401);
     } else if (!account) {
@@ -126,15 +126,16 @@ module.exports = function (mapper) {
    * Sets the data for a specific account configuration
    */
   router.post('/api/config/:account', function (req, res) {
+    var account = req.params.account ? req.params.account.toString() : null;
     if (!req.session.pryv || (req.session.pryv && !req.session.pryv.user)) {
       return res.send(401);
-    } else if (!req.body) {
+    } else if (!req.body || !account) {
       return res.send(400);
     } else {
       var data = req.body;
       var pryvUsername = req.session.pryv.user;
 
-      up.getServiceAccount(pryvUsername, data.aid, function (error, account) {
+      up.getServiceAccount(pryvUsername, account, function (error, account) {
         if (!error) {
           mergeSelectedValues(account.mapping, data.mapping);
           up.updateServiceAccount(pryvUsername, account, function (error) {
@@ -154,10 +155,10 @@ module.exports = function (mapper) {
    * Removes a service account associated to pryvUsername
    */
   router.delete('/api/config/:account', function (req, res) {
-    var account = req.params.account;
+    var account = req.params.account ? req.params.account.toString() : null;
     if (!req.session.pryv || (req.session.pryv && !req.session.pryv.user)) {
       return res.send(401);
-    } else if (!req.body) {
+    } else if (!req.body || !account) {
       return res.send(400);
     } else {
       var pryvUsername = req.session.pryv.user;
@@ -198,11 +199,15 @@ module.exports = function (mapper) {
           if (curRcv.uid === accOrigin[io].uid) {
             curOrig.name = curRcv.name;
             curOrig.active = curRcv.active;
+            curOrig.error = curRcv.error;
+            curOrig.events = curRcv.events;
             mergeSelectedValues(curOrig.streams, curRcv.streams);
           }
         }
       }
     }
   };
+
+
   return router;
 };
