@@ -124,12 +124,12 @@ var validateStream = function (stream) {
   var error = null;
   var valid = true;
 
-  valid = valid && stream.hasOwnProperty('name');
+  valid = valid && stream.hasOwnProperty('defaultName');
   valid = valid && stream.hasOwnProperty('id');
   valid = valid && stream.hasOwnProperty('uid');
   valid = valid && stream.hasOwnProperty('active');
+  valid = valid && stream.hasOwnProperty('creationSettings');
   valid = valid && stream.hasOwnProperty('error');
-  valid = valid && stream.hasOwnProperty('view');
   valid = valid && stream.hasOwnProperty('service');
 
   if (stream.streams && stream.streams.length !== 0) {
@@ -169,7 +169,6 @@ var validateEvent = function (event) {
   valid = valid && event.hasOwnProperty('uid');
   valid = valid && event.hasOwnProperty('active');
   valid = valid && event.hasOwnProperty('type');
-  valid = valid && event.hasOwnProperty('service');
 
   if (!valid) {
     error = event;

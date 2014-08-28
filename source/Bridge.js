@@ -33,7 +33,7 @@ var Bridge = module.exports = function (appName, appId) {
 };
 
 Bridge.prototype.start = function () {
-  app.use('/', apiRoute(this.mapper));
+  app.use('/', apiRoute(this.mapper), this.requestedPermissions);
   server();
   setTimeout(function () {
     this.job.start();
@@ -61,6 +61,10 @@ Bridge.prototype.addServiceAuthRoutes = function (authRoutes) {
 };
 
 
+Bridge.prototype.setRequestedPermissions = function (reqPerm) {
+  this.requestedPermissions = reqPerm;
+};
+
 
 /**
  * Mapper function setting with its scheduling
@@ -71,6 +75,7 @@ Bridge.prototype.addServiceAuthRoutes = function (authRoutes) {
 Bridge.prototype.setMapper = function (schedule, mapper, map) {
   var validation = mapUtils.validateMap(map);
   if (!validation.valid) {
+    console.error(validation.error);
     throw new Error(validation.error);
   }
 
