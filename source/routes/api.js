@@ -14,14 +14,15 @@ var UserProvider = require('../provider/UserProvider.js');
 var up = new UserProvider();
 
 
-module.exports = function (mapper) {
+module.exports = function (mapper, reqPerm) {
 
   router.get('/api/domain', function (req, res) {
     return res.send({
       pryvDomain: utils.getPryvDomain(),
       pryvStaging: utils.isStaging(),
       appId: config.get('service:appId'),
-      appName: config.get('service:appName')
+      appName: config.get('service:appName'),
+      permissions: reqPerm
     });
   });
 

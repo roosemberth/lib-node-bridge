@@ -13,16 +13,11 @@ angular.module('pryvBridge.controllers', []).
       console.log('SigninPryvCtrl');
 
 
-      var requestedPermissions = [
-        {
-          'streamId': '*',
-          'level': 'manage'
-        }
-      ];
+
 
       // Pryv Login dialog configuration //
       var settings = {
-        requestedPermissions: requestedPermissions,
+        requestedPermissions: null,
         returnURL: '', // set this if you don't want a popup
         spanButtonID: 'loginWithPryv', // (optional)
         callbacks: {
@@ -86,6 +81,8 @@ angular.module('pryvBridge.controllers', []).
           $rootScope.pryvDomain = data.pryvDomain;
           $rootScope.pryvStaging = data.pryvStaging;
           $rootScope.appId = data.appId;
+          $rootScope.requestedPermissions = data.permissions;
+          settings.requestedPermissions = data.permissions;
           loadAppData(data.appId, data.pryvStaging);
           if ($rootScope.pryvDomain === 'rec.la' ||
             $rootScope.pryvDomain === 'pryv.in') {
