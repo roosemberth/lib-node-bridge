@@ -28,64 +28,92 @@ AccountContainer.prototype.createStreams = function (callback) {
     if (!error) {
       mapUtils.bfTraversal(this.serviceAccount.mapping, function (node, callback) {
         if (mapUtils.isActiveNode(node)) {
-          if (!node.id) {
-            var stream2create = _.pick(node, 'name', 'parentId');
-            if (node.baseStreamIdOnServiceId) {
-              stream2create.name = node.name;
-              stream2create.id = node.name.toLowerCase() + '-' + this.serviceAccount.aid;
+          // prepare stream
+          var stream2create = {
+            parentId: node.parentId,
+            name: node.defaultName,
+            id: ''
+          };
 
-              try {
-                var res = this.connection.datastore.getStreamById(stream2create.id);
-                node.id = res.id;
-                for (var j = 0, ln = node.streams.length; j < ln; ++j) {
-                  node.streams[j].parentId = node.id;
+          console.log('node.uid', node.uid);
+
+          if (node.creationSettings.prefixSidWithParent) {
+            stream2create.id += node.parentId + '-';
+          }
+          stream2create.id += (node.id ? node.id : node.defaultName.toLowerCase());
+          if (node.creationSettings.postfixSidWithServiceId) {
+            stream2create.id += '-' + this.serviceAccount.aid;
+          }
+
+          if (node.creationSettings.postfixName === 'serviceId') {
+            stream2create.name += '-' + this.serviceAccount.aid;
+          }
+
+          // Check if it already exists
+          var existingWithSameId;
+          try {
+            existingWithSameId = this.connection.datastore.getStreamById(stream2create.id);
+          } catch (e) {
+            existingWithSameId = null;
+          }
+
+          var existingsParent;
+          if (stream2create.parentId) {
+            try {
+              existingsParent = this.connection.datastore.getStreamById(stream2create.parentId);
+            } catch (e) {
+              existingsParent = null;
+            }
+          } else {
+            existingsParent = {
+              children: this.connection.datastore.getStreams()
+            };
+          }
+
+          if (existingWithSameId) {
+            updateNodesChildsParentId(node, stream2create.id);
+            return callback(true);
+          } else if (existingsParent) {
+            var i = 0;
+            if (node.creationSettings.postfixName === 'serviceId') {
+              for (; i < existingsParent.children.length; ++i) {
+                if (existingsParent.children[i].name === stream2create.name) {
+                  stream2create.id = existingsParent.children[i].id;
+                  updateNodesChildsParentId(node, stream2create.id);
                   return callback(true);
                 }
-              } catch (e) {}
-            }
-
-            this.connection.streams.create(stream2create, function (error, stream) {
-              if (error && error.id === 'item-already-exists') {
-                var parentId = typeof(node.parentId) === 'undefined' ? null : node.parentId;
-                var streams = null;
-
-                if (parentId) {
-                  streams = this.connection.datastore.getStreamById(parentId).children;
-                } else {
-                  streams = this.connection.datastore.getStreams();
-                }
-                for (var i = 0, l = streams.length; i < l; ++i) {
-                  if (streams[i].name === node.name &&
-                    streams[i].parentId === parentId) {
-                    stream = streams[i];
-                    error = null;
-                    break;
+              }
+            } else if (node.creationSettings.postfixName === 'increment') {
+              for (var counter = 0, found = false; !found; ++counter) {
+                var name = node.defaultName + (counter ? ' ' + counter : '');
+                for (; i < existingsParent.children.length && !found; ++i) {
+                  if (existingsParent.children[i].name === name) {
+                    found = true;
                   }
                 }
-              }
-
-              if (!error) {
-                node.id = stream.id;
-                for (var j = 0, ln = node.streams.length; j < ln; ++j) {
-                  node.streams[j].parentId = node.id;
+                if (!found) {
+                  stream2create.name = name;
+                  found = true;
+                } else {
+                  found = false;
                 }
-                return callback(true);
-              } else if (error && error.id === 'API_UNREACHEABLE') {
-                return callback(false);
-              } else {
-                node.error = error;
-
-                return callback(false);
-              }
-            }.bind(this));
-          } else {
-            for (var j = 0, ln = node.streams.length; j < ln; ++j) {
-              if (!node.streams[j].parentId) {
-                node.streams[j].parentId = node.id;
               }
             }
-            return callback(true);
+          } else {
+            return callback(false);
           }
+          this.connection.streams.create(stream2create, function (error, stream) {
+            if (!error) {
+              node.id = stream.id;
+              updateNodesChildsParentId(node, stream.id);
+              return callback(true);
+            } else if (error && error.id === 'API_UNREACHEABLE') {
+              return callback(false);
+            } else {
+              node.error = error;
+              return callback(false);
+            }
+          }.bind(this));
         } else {
           return callback(false);
         }
@@ -98,6 +126,15 @@ AccountContainer.prototype.createStreams = function (callback) {
       return callback(error, null);
     }
   }.bind(this));
+};
+
+
+var updateNodesChildsParentId = function (node, parentId) {
+  for (var i = 0, ln = node.streams.length; i < ln; ++i) {
+    if (!node.streams[i].parentId) {
+      node.streams[i].parentId = parentId;
+    }
+  }
 };
 
 
@@ -235,5 +272,6 @@ var setFailedStreams = function (map, pryvUser, serviceAccount, streams, error) 
       return false;
     }
   });
-  db.updateServiceAccount(pryvUser, serviceAccount, function () {});
+  db.updateServiceAccount(pryvUser, serviceAccount, function () {
+  });
 };
