@@ -73,7 +73,8 @@ mapUtils.bfTraversalSync = function (tree, fn) {
  */
 mapUtils.isActiveNode  = function (node) {
   return node.active && (!node.error || (node.error &&
-    (!node.error.id || node.error.id === 'API_UNREACHEABLE')));
+    (!node.error.id || node.error.id === 'API_UNREACHEABLE' ||
+      node.error.id === 'unknown-referenced-resource')));
 };
 
 
