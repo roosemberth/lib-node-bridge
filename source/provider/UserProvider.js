@@ -106,6 +106,28 @@ UserProvider.prototype.removeUser = function (pryvUsername, callback) {
 };
 
 /**
+ * Removes an user
+ * @param pryvUsername
+ * @param callback
+ */
+UserProvider.prototype.updateUserCreds = function (pryvUsername, service, callback) {
+  console.log('updateUserCreds', pryvUsername, service);
+  if (!pryvUsername) {
+    if (typeof(callback) === 'function') {
+      callback('No username supplied', null);
+    }
+    return;
+  }
+  userDb.collection(config.get('database:userCollection'), function (err, collection) {
+    collection.update({username: pryvUsername}, {$set: {pryv: service}}, function (error) {
+      if (typeof(callback) === 'function') {
+        return callback(error, null);
+      }
+    });
+  });
+};
+
+/**
  * Retrieve an user from the database by pryvUsername
  * @param pryvUsername
  * @param callback

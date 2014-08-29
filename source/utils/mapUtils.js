@@ -72,7 +72,8 @@ mapUtils.bfTraversalSync = function (tree, fn) {
  * @returns {boolean}
  */
 mapUtils.isActiveNode  = function (node) {
-  return node.active && (!node.error || (node.error && !node.error.id));
+  return node.active && (!node.error || (node.error &&
+    (!node.error.id || node.error.id === 'API_UNREACHEABLE')));
 };
 
 

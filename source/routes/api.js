@@ -83,9 +83,15 @@ module.exports = function (mapper, reqPerm) {
                 res.send(200);
               }
             });
-          } else {
-            // update tokens?
-            res.send(200);
+          }
+          else {
+            up.updateUserCreds(username, {user: username, token: token}, function (error) {
+              if (error) {
+                res.send(500);
+              } else {
+                res.send(200);
+              }
+            });
           }
         });
       } else {

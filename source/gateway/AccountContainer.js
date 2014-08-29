@@ -9,6 +9,7 @@ var mapUtils = require('../utils/mapUtils.js');
 var AccountContainer = module.exports = function (pryvAccount, serviceAccount, connection) {
   this.pryvAccount = pryvAccount;
   this.serviceAccount = serviceAccount;
+  this.flatMap = {};
   if (connection) {
     this.connection = connection;
   } else {
@@ -23,29 +24,29 @@ var AccountContainer = module.exports = function (pryvAccount, serviceAccount, c
  * Creates the streams recursively if active and not having an error
  * @param {function} callback called when done
  */
-AccountContainer.prototype.createStreams = function (callback) {
+AccountContainer.prototype.createStreams = function (cb) {
   this.connection.fetchStructure(function (error) {
     if (!error) {
       mapUtils.bfTraversal(this.serviceAccount.mapping, function (node, callback) {
         if (mapUtils.isActiveNode(node)) {
           // prepare stream
           var stream2create = {
-            parentId: node.parentId,
+            parentId: node.parentId ? node.parentId : null,
             name: node.defaultName,
-            id: ''
+            id: node.id
           };
 
-          console.log('node.uid', node.uid);
-
-          if (node.creationSettings.prefixSidWithParent) {
+          if (node.creationSettings.prefixSidWithParent && !node.id) {
             stream2create.id += node.parentId + '-';
           }
-          stream2create.id += (node.id ? node.id : node.defaultName.toLowerCase());
-          if (node.creationSettings.postfixSidWithServiceId) {
+          if (!node.id) {
+            stream2create.id += node.defaultName.toLowerCase();
+          }
+          if (node.creationSettings.postfixSidWithServiceId && !node.id) {
             stream2create.id += '-' + this.serviceAccount.aid;
           }
 
-          if (node.creationSettings.postfixName === 'serviceId') {
+          if (node.creationSettings.postfixName === 'serviceId' && !node.id) {
             stream2create.name += '-' + this.serviceAccount.aid;
           }
 
@@ -70,22 +71,58 @@ AccountContainer.prototype.createStreams = function (callback) {
             };
           }
 
+          console.log('stream to create: ', stream2create.name, stream2create.id, stream2create.parentId);
+
           if (existingWithSameId) {
+            console.log('creation 1', stream2create.id);
+            node.id = stream2create.id;
             updateNodesChildsParentId(node, stream2create.id);
             return callback(true);
           } else if (existingsParent) {
             var i = 0;
+            var name = null;
+            var counter = 0;
+            var found = false;
+            /** This has to be change a little bit, id is not fixed **/
             if (node.creationSettings.postfixName === 'serviceId') {
               for (; i < existingsParent.children.length; ++i) {
                 if (existingsParent.children[i].name === stream2create.name) {
-                  stream2create.id = existingsParent.children[i].id;
-                  updateNodesChildsParentId(node, stream2create.id);
-                  return callback(true);
+
+                  for (counter = 0, found = false; !found; ++counter) {
+                    name = stream2create.name + ' (' + counter + ')';
+                    for (; i < existingsParent.children.length && !found; ++i) {
+                      if (existingsParent.children[i].name === name) {
+                        found = true;
+                      }
+                    }
+                    if (!found) {
+                      stream2create.name = name;
+                      found = true;
+                    } else {
+                      found = false;
+                    }
+                  }
+                  break;
                 }
               }
             } else if (node.creationSettings.postfixName === 'increment') {
-              for (var counter = 0, found = false; !found; ++counter) {
-                var name = node.defaultName + (counter ? ' ' + counter : '');
+              for (counter = 0, found = false; !found; ++counter) {
+                name = node.defaultName + (counter ? ' ' + counter : '');
+                for (; i < existingsParent.children.length && !found; ++i) {
+                  if (existingsParent.children[i].name === name) {
+                    found = true;
+                  }
+                }
+                if (!found) {
+                  stream2create.name = name;
+                  found = true;
+                } else {
+                  found = false;
+                }
+              }
+            } else {
+              for (counter = 0, found = false; !found; ++counter) {
+                name = node.defaultName + (counter ? ' ' + counter : '');
                 for (; i < existingsParent.children.length && !found; ++i) {
                   if (existingsParent.children[i].name === name) {
                     found = true;
@@ -100,30 +137,37 @@ AccountContainer.prototype.createStreams = function (callback) {
               }
             }
           } else {
+            console.log('creation 3', stream2create.id);
             return callback(false);
           }
           this.connection.streams.create(stream2create, function (error, stream) {
             if (!error) {
               node.id = stream.id;
               updateNodesChildsParentId(node, stream.id);
+              console.log('creation 4', stream2create.id);
               return callback(true);
             } else if (error && error.id === 'API_UNREACHEABLE') {
+              console.log('creation 5', stream2create.id);
               return callback(false);
             } else {
               node.error = error;
+              console.log('creation 6', stream2create.id);
               return callback(false);
             }
           }.bind(this));
         } else {
+          console.log('creation 7', node.uid, node.error);
           return callback(false);
         }
       }.bind(this), function () {
         db.updateServiceAccount(this.pryvAccount.user, this.serviceAccount, function () {
-          callback();
-        });
+          this.flattenMap();
+          cb();
+        }.bind(this));
       }.bind(this));
     } else {
-      return callback(error, null);
+      console.log('here, but why?', error);
+      return cb(error, null);
     }
   }.bind(this));
 };
@@ -273,5 +317,14 @@ var setFailedStreams = function (map, pryvUser, serviceAccount, streams, error) 
     }
   });
   db.updateServiceAccount(pryvUser, serviceAccount, function () {
+  });
+};
+
+
+AccountContainer.prototype.flattenMap = function () {
+  var that = this;
+  mapUtils.bfTraversalSync(that.serviceAccount.mapping, function (node) {
+    that.flatMap[node.uid] = node;
+    return true;
   });
 };

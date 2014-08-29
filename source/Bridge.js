@@ -19,7 +19,7 @@ var Bridge = module.exports = function (appName, appId) {
   }
 
   if (appId && appId.length !== 0 && appName && appName.length !== 0) {
-    config.set('service:name', appName);
+    config.set('service:appName', appName);
     config.set('service:appId', appId);
   }
 
@@ -33,7 +33,7 @@ var Bridge = module.exports = function (appName, appId) {
 };
 
 Bridge.prototype.start = function () {
-  app.use('/', apiRoute(this.mapper), this.requestedPermissions);
+  app.use('/', apiRoute(this.mapper, this.requestedPermissions));
   server();
   setTimeout(function () {
     this.job.start();
