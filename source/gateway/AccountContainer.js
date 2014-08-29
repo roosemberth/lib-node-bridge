@@ -71,10 +71,10 @@ AccountContainer.prototype.createStreams = function (cb) {
             };
           }
 
-          console.log('stream to create: ', stream2create.name, stream2create.id, stream2create.parentId);
+          //console.log('stream to create: ', stream2create.name, stream2create.id, stream2create.parentId);
 
           if (existingWithSameId) {
-            console.log('creation 1', stream2create.id);
+            //console.log('creation 1', stream2create.id);
             node.id = stream2create.id;
             updateNodesChildsParentId(node, stream2create.id);
             return callback(true);
@@ -137,26 +137,26 @@ AccountContainer.prototype.createStreams = function (cb) {
               }
             }
           } else {
-            console.log('creation 3', stream2create.id);
+            //console.log('creation 3', stream2create.id);
             return callback(false);
           }
           this.connection.streams.create(stream2create, function (error, stream) {
             if (!error) {
               node.id = stream.id;
               updateNodesChildsParentId(node, stream.id);
-              console.log('creation 4', stream2create.id);
+              //console.log('creation 4', stream2create.id);
               return callback(true);
             } else if (error && error.id === 'API_UNREACHEABLE') {
-              console.log('creation 5', stream2create.id);
+              //console.log('creation 5', stream2create.id);
               return callback(false);
             } else {
               node.error = error;
-              console.log('creation 6', stream2create.id);
+              //console.log('creation 6', stream2create.id);
               return callback(false);
             }
           }.bind(this));
         } else {
-          console.log('creation 7', node.uid, node.error);
+          //console.log('creation 7', node.uid, node.error);
           return callback(false);
         }
       }.bind(this), function () {
@@ -166,7 +166,7 @@ AccountContainer.prototype.createStreams = function (cb) {
         }.bind(this));
       }.bind(this));
     } else {
-      console.log('here, but why?', error);
+      //console.log('here, but why?', error);
       return cb(error, null);
     }
   }.bind(this));
@@ -198,7 +198,7 @@ AccountContainer.prototype.batchCreateEvents = function (events, callback) {
   if (!events || (events && events.length === 0)) {
     mapUtils.updateUpdateTimestamp(this.serviceAccount.mapping);
     db.updateServiceAccount(this.pryvAccount.user, this.serviceAccount);
-    console.log('batchCreateEvents 1');
+    //console.log('batchCreateEvents 1');
     return callback();
   }
 
