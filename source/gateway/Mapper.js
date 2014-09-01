@@ -184,7 +184,8 @@ Mapper.prototype.executeCron = function () {
             console.warn('launching for', pryvContext.account.user, service.accounts[i].aid);
             var currentAccount = new AccountContainer(
               pryvContext.account, service.accounts[i], pryvContext.connection);
-            currentAccount.flattenMap();
+            currentAccount.streamFlattenMap();
+            currentAccount.eventFlattenMap();
             var fn = createPreStreamCreationFunctions(
               that, generalContext, pryvContext, currentAccount);
             mappers.push(fn);

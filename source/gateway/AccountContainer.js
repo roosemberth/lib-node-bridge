@@ -10,6 +10,7 @@ var AccountContainer = module.exports = function (pryvAccount, serviceAccount, c
   this.pryvAccount = pryvAccount;
   this.serviceAccount = serviceAccount;
   this.flatMap = {};
+  this.eventFlatMap = {};
   if (connection) {
     this.connection = connection;
   } else {
@@ -71,10 +72,7 @@ AccountContainer.prototype.createStreams = function (cb) {
             };
           }
 
-          //console.log('stream to create: ', stream2create.name, stream2create.id, stream2create.parentId);
-
           if (existingWithSameId) {
-            //console.log('creation 1', stream2create.id);
             node.id = stream2create.id;
             updateNodesChildsParentId(node, stream2create.id);
             return callback(true);
@@ -137,36 +135,30 @@ AccountContainer.prototype.createStreams = function (cb) {
               }
             }
           } else {
-            //console.log('creation 3', stream2create.id);
             return callback(false);
           }
           this.connection.streams.create(stream2create, function (error, stream) {
             if (!error) {
               node.id = stream.id;
               updateNodesChildsParentId(node, stream.id);
-              //console.log('creation 4', stream2create.id);
               return callback(true);
             } else if (error && error.id === 'API_UNREACHEABLE') {
-              //console.log('creation 5', stream2create.id);
               return callback(false);
             } else {
               node.error = error;
-              //console.log('creation 6', stream2create.id);
               return callback(false);
             }
           }.bind(this));
         } else {
-          //console.log('creation 7', node.uid, node.error);
           return callback(false);
         }
       }.bind(this), function () {
         db.updateServiceAccount(this.pryvAccount.user, this.serviceAccount, function () {
-          this.flattenMap();
+          this.streamFlattenMap();
           cb();
         }.bind(this));
       }.bind(this));
     } else {
-      //console.log('here, but why?', error);
       return cb(error, null);
     }
   }.bind(this));
@@ -219,7 +211,7 @@ AccountContainer.prototype.batchCreateEvents = function (events, callback) {
     streams: streams,
     sortAscending: false
   }, function (error, ev) {
-    console.log(error);
+    console.error('error here', JSON.stringify(error));
     if (!error) {
       var notFound = [];
       for (var i = 0, l = events.length; i < l; ++i) {
@@ -321,10 +313,20 @@ var setFailedStreams = function (map, pryvUser, serviceAccount, streams, error) 
 };
 
 
-AccountContainer.prototype.flattenMap = function () {
+AccountContainer.prototype.streamFlattenMap = function () {
   var that = this;
   mapUtils.bfTraversalSync(that.serviceAccount.mapping, function (node) {
     that.flatMap[node.uid] = node;
+    return true;
+  });
+};
+
+AccountContainer.prototype.eventFlattenMap = function () {
+  var that = this;
+  mapUtils.bfTraversalSync(that.serviceAccount.mapping, function (node) {
+    for (var i = 0, l = node.events.length; i < l; ++i ) {
+      that.eventFlatMap[ node.events[i].uid] = node.events[i];
+    }
     return true;
   });
 };
