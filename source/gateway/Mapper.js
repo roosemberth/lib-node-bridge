@@ -56,7 +56,7 @@ Mapper.implement = function (constructor, members) {
  * @param callback function(error, result)
  */
 Mapper.prototype.preMapGeneral = function (generalContext, callback) {
-  console.warn('Mapper.prototype.preMapGeneral');
+  console.log('[INFO]', new Date(), 'Mapper.prototype.preMapGeneral');
   callback(null, null);
 };
 
@@ -67,7 +67,7 @@ Mapper.prototype.preMapGeneral = function (generalContext, callback) {
  * @param callback function(error, result)
  */
 Mapper.prototype.preMapPryv = function (generalContext, pryvContext, callback) {
-  console.warn('Mapper.prototype.preMapPryv');
+  console.log('[INFO]', new Date(), 'Mapper.prototype.preMapPryv');
   callback(null, null);
 };
 
@@ -80,7 +80,7 @@ Mapper.prototype.preMapPryv = function (generalContext, pryvContext, callback) {
  */
 Mapper.prototype.preStreamCreation =
   function (generalContext, pryvContext, accountContainer, callback) {
-    console.warn('Mapper.prototype.preStreamCreation');
+    console.log('[INFO]', new Date(), 'Mapper.prototype.preStreamCreation');
     callback(null, null);
   };
 
@@ -93,7 +93,7 @@ Mapper.prototype.preStreamCreation =
  */
 Mapper.prototype.preMapService =
   function (generalContext, pryvContext, accountContainer, callback) {
-    console.warn('Mapper.prototype.preMapService');
+    console.log('[INFO]', new Date(), 'Mapper.prototype.preMapService');
     callback(null, null);
   };
 
@@ -105,6 +105,7 @@ Mapper.prototype.preMapService =
  * @param callback function(error, result)
  */
 Mapper.prototype.map = function (generalContext, pryvContext, accountContainer, callback) {
+  console.error('[ERROR]', new Date(), 'Unimplemented method: Mapper.map()');
   throw new Error('Unimplemented method: Mapper.map()');
 };
 
@@ -117,7 +118,7 @@ Mapper.prototype.map = function (generalContext, pryvContext, accountContainer, 
  */
 Mapper.prototype.postMapService =
   function (generalContext, pryvContext, accountContainer, callback) {
-    console.warn('Mapper.prototype.postMapService');
+    console.log('[INFO]', new Date(), 'Mapper.prototype.postMapService');
     callback(null, null);
   };
 
@@ -129,7 +130,7 @@ Mapper.prototype.postMapService =
  * @param callback function(error, result)
  */
 Mapper.prototype.postMapPryv = function (generalContext, pryvContext, callback) {
-  console.warn('Mapper.prototype.postMapPryv');
+  console.log('[INFO]', new Date(), 'Mapper.prototype.postMapPryv');
   callback(null, null);
 };
 
@@ -139,7 +140,7 @@ Mapper.prototype.postMapPryv = function (generalContext, pryvContext, callback) 
  * @param callback function(error, result)
  */
 Mapper.prototype.postMapGeneral = function (generalContext, callback) {
-  console.warn('Mapper.prototype.postMapGeneral');
+  console.log('[INFO]', new Date(), 'Mapper.prototype.postMapGeneral');
   callback(null, null);
 };
 
@@ -148,7 +149,7 @@ Mapper.prototype.postMapGeneral = function (generalContext, callback) {
  * This is the cronjob.
  */
 Mapper.prototype.executeCron = function () {
-  console.warn('Mapper.prototype.executeCron');
+  console.log('[INFO]', new Date(), 'Mapper.prototype.executeCron');
 
   var that = this;
   var generalContext = {};
@@ -157,9 +158,9 @@ Mapper.prototype.executeCron = function () {
       return;
     }
     generalContext.generalResult = generalResult;
+
     var accountCounter = 0;
     that.database.forEachAccount(function (account) {
-
       accountCounter++;
       process.nextTick(function () {
         var pryvContext = {
@@ -170,7 +171,6 @@ Mapper.prototype.executeCron = function () {
             staging: utils.isStaging()
           })
         };
-
         that.preMapPryv(generalContext, pryvContext, function (error, pryvResult) {
           if (error) {
             return;
@@ -181,16 +181,16 @@ Mapper.prototype.executeCron = function () {
           pryvContext.pryvResult = pryvResult;
 
           for (var i = 0; i < service.accounts.length; ++i) {
-            console.warn('launching for', pryvContext.account.user, service.accounts[i].aid);
+            console.log('[INFO]', new Date(), 'Account: ',
+              pryvContext.account.user, service.accounts[i].aid);
             var currentAccount = new AccountContainer(
               pryvContext.account, service.accounts[i], pryvContext.connection);
             currentAccount.streamFlattenMap();
             currentAccount.eventFlattenMap();
-            var fn = createPreStreamCreationFunctions(
-              that, generalContext, pryvContext, currentAccount);
+            var fn = createPreStreamCreationFunctions(that, generalContext,
+              pryvContext, currentAccount);
             mappers.push(fn);
           }
-
 
           async.parallel(mappers, function () {
             that.postMapPryv(generalContext, pryvContext, function () {
@@ -239,3 +239,53 @@ var createPreStreamCreationFunctions =
       );
     };
   };
+
+
+/**
+ * Return the following errors, where
+ *    timeout: wait
+ *    resource-inaccessible: no right on stream -> deleted or moved
+ *    auth-required: tokens invalid -> stop all
+ *    user-intervention: something else invalid -> stop all
+ *
+ * @param error
+ * @returns {string}
+ */
+var errorResolver = function (error) {
+  switch (error.id) {
+    case 'invalid-request-structure': {
+      console.error(error.id, error);
+      return 'timeout';
+    }
+    case 'invalid-parameters-format': {
+      console.error(error.id, error);
+      return 'timeout';
+    }
+    case 'unknown-referenced-resource': {   // Stream was delete
+      return 'resource-inaccessible';
+    }
+    case 'invalid-access-token': {
+      return 'auth-required';
+    }
+    case 'forbidden': {
+      return 'auth-required';
+    }
+    case 'unknown-resource': {
+      return 'resource-inaccessible';
+    }
+    case 'user-account-relocated': {
+      return 'timeout';
+    }
+    case 'user-intervention-required': {
+      return 'user-intervention';
+    }
+    case 'API_UNREACHEABLE': {
+      return 'timeout';
+    }
+    default: {
+      return 'timeout';
+    }
+
+  }
+};
+

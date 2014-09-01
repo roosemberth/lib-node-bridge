@@ -29,7 +29,7 @@ AccountContainer.prototype.createStreams = function (cb) {
   this.connection.fetchStructure(function (error) {
     if (!error) {
       mapUtils.bfTraversal(this.serviceAccount.mapping, function (node, callback) {
-        if (mapUtils.isActiveNode(node)) {
+        if (mapUtils.isUsableNode(node)) {
           // prepare stream
           var stream2create = {
             parentId: node.parentId ? node.parentId : null,
@@ -81,7 +81,7 @@ AccountContainer.prototype.createStreams = function (cb) {
             var name = null;
             var counter = 0;
             var found = false;
-            /** This has to be change a little bit, id is not fixed **/
+            /** This has to change a little bit, id is not fixed **/
             if (node.creationSettings.postfixName === 'serviceId') {
               for (; i < existingsParent.children.length; ++i) {
                 if (existingsParent.children[i].name === stream2create.name) {
@@ -154,11 +154,12 @@ AccountContainer.prototype.createStreams = function (cb) {
         }
       }.bind(this), function () {
         db.updateServiceAccount(this.pryvAccount.user, this.serviceAccount, function () {
-          this.streamFlattenMap();
           cb();
         }.bind(this));
       }.bind(this));
     } else {
+      console.error('[ERROR]', new Date(), 'AccountContainer',
+        this.pryvAccount.user, 'failed to fetch structure');
       return cb(error, null);
     }
   }.bind(this));
@@ -293,26 +294,24 @@ AccountContainer.prototype.batchCreateEvents = function (events, callback) {
 
 var setFailedStreams = function (map, pryvUser, serviceAccount, streams, error) {
   mapUtils.bfTraversalSync(map, function (node) {
-    if (mapUtils.isActiveNode(node)) {
-      if (streams instanceof Array) {
-        if (_.indexOf(streams, node.id) !== -1) {
-          delete node.updateCurrent;
-          node.error = error;
-        }
-      } else if (!!streams[node.id]) {
+    if (streams instanceof Array) {
+      if (_.indexOf(streams, node.id) !== -1) {
         delete node.updateCurrent;
-        node.error = streams[node.id];
+        node.error = error;
       }
-      return true;
-    } else {
-      return false;
+    } else if (!!streams[node.id]) {
+      delete node.updateCurrent;
+      node.error = streams[node.id];
     }
+    return true;
   });
   db.updateServiceAccount(pryvUser, serviceAccount, function () {
   });
 };
 
-
+/**
+ * Creates a flat version of the stream-nodes of the map
+ */
 AccountContainer.prototype.streamFlattenMap = function () {
   var that = this;
   mapUtils.bfTraversalSync(that.serviceAccount.mapping, function (node) {
@@ -321,10 +320,13 @@ AccountContainer.prototype.streamFlattenMap = function () {
   });
 };
 
+/**
+ * Creates a flat version of the event-nodes of the map
+ */
 AccountContainer.prototype.eventFlattenMap = function () {
   var that = this;
   mapUtils.bfTraversalSync(that.serviceAccount.mapping, function (node) {
-    for (var i = 0, l = node.events.length; i < l; ++i ) {
+    for (var i = 0, l = node.events.length; i < l; ++i) {
       that.eventFlatMap[ node.events[i].uid] = node.events[i];
     }
     return true;

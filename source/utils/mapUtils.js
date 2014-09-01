@@ -1,11 +1,13 @@
-/**
- *
- * @param tree
- * @param fn function (node, callback = function (success))
- * @param callback
- */
+
 var  mapUtils = module.exports = {};
 
+/**
+ * Asynchronous BF tree map traversal with function execution
+ * on each node (stream)
+ * @param tree      the tree
+ * @param fn        the function to be executed function (node)
+ * @param callback  executed when done
+ */
 mapUtils.bfTraversal = function (tree, fn, callback) {
   var instanceCounter = 0;
 
@@ -19,7 +21,6 @@ mapUtils.bfTraversal = function (tree, fn, callback) {
             bfs(node.streams[i]);
           }
         }
-
         if (!(--instanceCounter)) {
           return callback();
         }
@@ -41,7 +42,12 @@ mapUtils.bfTraversal = function (tree, fn, callback) {
   }
 };
 
-
+/**
+ * Synchronous BF tree map traversal with function execution
+ * on each node (stream)
+ * @param tree      the tree
+ * @param fn        the function to be executed function (node)
+ */
 mapUtils.bfTraversalSync = function (tree, fn) {
 
   var bfs = function (node) {
@@ -67,23 +73,59 @@ mapUtils.bfTraversalSync = function (tree, fn) {
 
 
 /**
- * Returns true is the node is active and error-free
+ * True if active but has an error (not timeout)
  * @param node from mapping
  * @returns {boolean}
  */
-mapUtils.isActiveNode  = function (node) {
+mapUtils.isFailedNode  = function (node) {
   return node.active && (!node.error || (node.error &&
-    (!node.error.id || node.error.id === 'API_UNREACHEABLE' ||
-      node.error.id === 'unknown-referenced-resource')));
+    (!node.error.id || node.error.id !== 'timeout' )));
 };
 
+/**
+ * True if is active and only possible error is timeout
+ * @param node
+ * @returns {*|boolean}
+ */
+mapUtils.isUsableNode  = function (node) {
+  return node.active && (!node.error || (node.error &&
+    (!node.error.id || node.error.id === 'timeout')));
+};
 
+/**
+ * True if active and absolutely no error
+ * @param node
+ * @returns {*|boolean}
+ */
+mapUtils.isErrorFree  = function (node) {
+  return node.active && (!node.error || (node.error && !node.error.id ));
+};
+
+/**
+ * Clears all nodes having timeout errors
+ * @param map
+ */
+mapUtils.clearTimedoutNodes = function (map) {
+  mapUtils.bfTraversalSync(map, function (node) {
+    if (node.error && node.error.id === 'timeout') {
+      delete node.error;
+    }
+    return true;
+  });
+};
+
+/**
+ * Clears all errors
+ * @param map
+ * @param callback
+ */
 mapUtils.clearAllErrors = function (map, callback) {
   mapUtils.bfTraversal(map, function (node, callback) {
     delete node.error;
     callback(true);
   }, callback);
 };
+
 
 mapUtils.updateUpdateTimestamp = function (map) {
   mapUtils.bfTraversalSync(map, function (node) {
@@ -105,6 +147,11 @@ mapUtils.updateUpdateTimestamp = function (map) {
 };
 
 
+/**
+ * Map validation
+ * @param map
+ * @returns {*}
+ */
 mapUtils.validateMap = function (map) {
   if (!map || map.length === 0) {
     return false;
