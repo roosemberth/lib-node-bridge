@@ -4,6 +4,7 @@ var utils = require('../utils/utils.js');
 var UserProvider = require('../provider/UserProvider.js');
 var db = new UserProvider();
 var mapUtils = require('../utils/mapUtils.js');
+var createStream = require('./createStream.js');
 
 
 var AccountContainer = module.exports = function (pryvAccount, serviceAccount, connection) {
@@ -22,158 +23,32 @@ var AccountContainer = module.exports = function (pryvAccount, serviceAccount, c
   }
 };
 /**
- * Creates the streams recursively if active and not having an error
+ * Streams are created when asking the permissions,
+ * this function just moves them around to the right place
  * @param {function} callback called when done
  */
 AccountContainer.prototype.createStreams = function (cb) {
-  this.connection.fetchStructure(function (error) {
-    if (!error) {
-      mapUtils.bfTraversal(this.serviceAccount.mapping, function (node, callback) {
+  var that = this;
+  that.connection.fetchStructure(function (error) {
+    if (error) {
+      console.log('[INFO]', (new Date()).valueOf(), 'Failed to fetch structure for',
+        that.pryvAccount.user);
+      return cb(error, null);
+    } else {
+      mapUtils.bfTraversal(that.serviceAccount.mapping, function (node, callback) {
         if (mapUtils.isUsableNode(node)) {
-          // prepare stream
-          var stream2create = {
-            parentId: node.parentId ? node.parentId : null,
-            name: node.defaultName,
-            id: node.id
-          };
-
-          if (node.creationSettings.prefixSidWithParent && !node.id) {
-            stream2create.id += node.parentId + '-';
-          }
-          if (!node.id) {
-            stream2create.id += node.defaultName.toLowerCase();
-          }
-          if (node.creationSettings.postfixSidWithServiceId && !node.id) {
-            stream2create.id += '-' + this.serviceAccount.aid;
-          }
-
-          if (node.creationSettings.postfixName === 'serviceId' && !node.id) {
-            stream2create.name += '-' + this.serviceAccount.aid;
-          }
-
-          // Check if it already exists
-          var existingWithSameId;
-          try {
-            existingWithSameId = this.connection.datastore.getStreamById(stream2create.id);
-          } catch (e) {
-            existingWithSameId = null;
-          }
-
-          var existingsParent;
-          if (stream2create.parentId) {
-            try {
-              existingsParent = this.connection.datastore.getStreamById(stream2create.parentId);
-            } catch (e) {
-              existingsParent = null;
-            }
-          } else {
-            existingsParent = {
-              children: this.connection.datastore.getStreams()
-            };
-          }
-
-          if (existingWithSameId) {
-            node.id = stream2create.id;
-            updateNodesChildsParentId(node, stream2create.id);
-            return callback(true);
-          } else if (existingsParent) {
-            var i = 0;
-            var name = null;
-            var counter = 0;
-            var found = false;
-            /** This has to change a little bit, id is not fixed **/
-            if (node.creationSettings.postfixName === 'serviceId') {
-              for (; i < existingsParent.children.length; ++i) {
-                if (existingsParent.children[i].name === stream2create.name) {
-
-                  for (counter = 0, found = false; !found; ++counter) {
-                    name = stream2create.name + ' (' + counter + ')';
-                    for (; i < existingsParent.children.length && !found; ++i) {
-                      if (existingsParent.children[i].name === name) {
-                        found = true;
-                      }
-                    }
-                    if (!found) {
-                      stream2create.name = name;
-                      found = true;
-                    } else {
-                      found = false;
-                    }
-                  }
-                  break;
-                }
-              }
-            } else if (node.creationSettings.postfixName === 'increment') {
-              for (counter = 0, found = false; !found; ++counter) {
-                name = node.defaultName + (counter ? ' ' + counter : '');
-                for (; i < existingsParent.children.length && !found; ++i) {
-                  if (existingsParent.children[i].name === name) {
-                    found = true;
-                  }
-                }
-                if (!found) {
-                  stream2create.name = name;
-                  found = true;
-                } else {
-                  found = false;
-                }
-              }
-            } else {
-              for (counter = 0, found = false; !found; ++counter) {
-                name = node.defaultName + (counter ? ' ' + counter : '');
-                for (; i < existingsParent.children.length && !found; ++i) {
-                  if (existingsParent.children[i].name === name) {
-                    found = true;
-                  }
-                }
-                if (!found) {
-                  stream2create.name = name;
-                  found = true;
-                } else {
-                  found = false;
-                }
-              }
-            }
-          } else {
-            return callback(false);
-          }
-          this.connection.streams.create(stream2create, function (error, stream) {
-            if (!error) {
-              node.id = stream.id;
-              updateNodesChildsParentId(node, stream.id);
-              return callback(true);
-            } else if (error && error.id === 'API_UNREACHEABLE') {
-              return callback(false);
-            } else {
-              node.error = error;
-              return callback(false);
-            }
-          }.bind(this));
+          createStream(that, node, callback);
         } else {
           return callback(false);
         }
-      }.bind(this), function () {
-        db.updateServiceAccount(this.pryvAccount.user, this.serviceAccount, function () {
+      }, function () {
+        db.updateServiceAccount(that.pryvAccount.user, that.serviceAccount, function () {
           cb();
-        }.bind(this));
-      }.bind(this));
-    } else {
-      console.error('[ERROR]', new Date(), 'AccountContainer',
-        this.pryvAccount.user, 'failed to fetch structure');
-      return cb(error, null);
+        });
+      });
     }
-  }.bind(this));
+  });
 };
-
-
-var updateNodesChildsParentId = function (node, parentId) {
-  for (var i = 0, ln = node.streams.length; i < ln; ++i) {
-    if (!node.streams[i].parentId) {
-      node.streams[i].parentId = parentId;
-    }
-  }
-};
-
 
 /**
  * Pushes the event-likes to this associated Pryv account and signals
@@ -212,7 +87,7 @@ AccountContainer.prototype.batchCreateEvents = function (events, callback) {
     streams: streams,
     sortAscending: false
   }, function (error, ev) {
-    console.error('error here', JSON.stringify(error));
+    console.error('[ERROR]', JSON.stringify(error.message));
     if (!error) {
       var notFound = [];
       for (var i = 0, l = events.length; i < l; ++i) {

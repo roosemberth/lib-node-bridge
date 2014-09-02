@@ -89,6 +89,8 @@ angular.module('pryvBridge.controllers', []).
             pryv.Auth.config.registerURL = { host: 'reg.pryv.in', 'ssl': true};
           }
 
+          console.log(settings);
+
           settings.requestingAppId = $rootScope.appId;
           if (!$rootScope.pryv) {
             console.log(pryv.Auth.config);

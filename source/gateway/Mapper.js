@@ -12,11 +12,6 @@ var utils = require('../utils/utils.js');
 var AccountContainer = require('./AccountContainer.js');
 var async = require('async');
 
-
-// error then result. !!!
-// use context
-
-
 /**
  * Constructor of the mapper, pass and instance of UserProvider to it.
  * Extend it to use the hooks.
@@ -56,7 +51,7 @@ Mapper.implement = function (constructor, members) {
  * @param callback function(error, result)
  */
 Mapper.prototype.preMapGeneral = function (generalContext, callback) {
-  console.log('[INFO]', new Date(), 'Mapper.prototype.preMapGeneral');
+  console.log('[INFO]', (new Date()).valueOf(), 'Mapper.prototype.preMapGeneral');
   callback(null, null);
 };
 
@@ -67,7 +62,7 @@ Mapper.prototype.preMapGeneral = function (generalContext, callback) {
  * @param callback function(error, result)
  */
 Mapper.prototype.preMapPryv = function (generalContext, pryvContext, callback) {
-  console.log('[INFO]', new Date(), 'Mapper.prototype.preMapPryv');
+  console.log('[INFO]', (new Date()).valueOf(), 'Mapper.prototype.preMapPryv');
   callback(null, null);
 };
 
@@ -80,7 +75,7 @@ Mapper.prototype.preMapPryv = function (generalContext, pryvContext, callback) {
  */
 Mapper.prototype.preStreamCreation =
   function (generalContext, pryvContext, accountContainer, callback) {
-    console.log('[INFO]', new Date(), 'Mapper.prototype.preStreamCreation');
+    console.log('[INFO]', (new Date()).valueOf(), 'Mapper.prototype.preStreamCreation');
     callback(null, null);
   };
 
@@ -93,7 +88,7 @@ Mapper.prototype.preStreamCreation =
  */
 Mapper.prototype.preMapService =
   function (generalContext, pryvContext, accountContainer, callback) {
-    console.log('[INFO]', new Date(), 'Mapper.prototype.preMapService');
+    console.log('[INFO]', (new Date()).valueOf(), 'Mapper.prototype.preMapService');
     callback(null, null);
   };
 
@@ -105,7 +100,7 @@ Mapper.prototype.preMapService =
  * @param callback function(error, result)
  */
 Mapper.prototype.map = function (generalContext, pryvContext, accountContainer, callback) {
-  console.error('[ERROR]', new Date(), 'Unimplemented method: Mapper.map()');
+  console.error('[ERROR]', (new Date()).valueOf(), 'Unimplemented method: Mapper.map()');
   throw new Error('Unimplemented method: Mapper.map()');
 };
 
@@ -118,7 +113,7 @@ Mapper.prototype.map = function (generalContext, pryvContext, accountContainer, 
  */
 Mapper.prototype.postMapService =
   function (generalContext, pryvContext, accountContainer, callback) {
-    console.log('[INFO]', new Date(), 'Mapper.prototype.postMapService');
+    console.log('[INFO]', (new Date()).valueOf(), 'Mapper.prototype.postMapService');
     callback(null, null);
   };
 
@@ -130,7 +125,7 @@ Mapper.prototype.postMapService =
  * @param callback function(error, result)
  */
 Mapper.prototype.postMapPryv = function (generalContext, pryvContext, callback) {
-  console.log('[INFO]', new Date(), 'Mapper.prototype.postMapPryv');
+  console.log('[INFO]', (new Date()).valueOf(), 'Mapper.prototype.postMapPryv');
   callback(null, null);
 };
 
@@ -140,7 +135,7 @@ Mapper.prototype.postMapPryv = function (generalContext, pryvContext, callback) 
  * @param callback function(error, result)
  */
 Mapper.prototype.postMapGeneral = function (generalContext, callback) {
-  console.log('[INFO]', new Date(), 'Mapper.prototype.postMapGeneral');
+  console.log('[INFO]', (new Date()).valueOf(), 'Mapper.prototype.postMapGeneral');
   callback(null, null);
 };
 
@@ -149,7 +144,7 @@ Mapper.prototype.postMapGeneral = function (generalContext, callback) {
  * This is the cronjob.
  */
 Mapper.prototype.executeCron = function () {
-  console.log('[INFO]', new Date(), 'Mapper.prototype.executeCron');
+  console.log('[INFO]', (new Date()).valueOf(), 'Mapper.prototype.executeCron');
 
   var that = this;
   var generalContext = {};
@@ -181,7 +176,7 @@ Mapper.prototype.executeCron = function () {
           pryvContext.pryvResult = pryvResult;
 
           for (var i = 0; i < service.accounts.length; ++i) {
-            console.log('[INFO]', new Date(), 'Account: ',
+            console.log('[INFO]', (new Date()).valueOf(), 'Account:',
               pryvContext.account.user, service.accounts[i].aid);
             var currentAccount = new AccountContainer(
               pryvContext.account, service.accounts[i], pryvContext.connection);
@@ -194,10 +189,11 @@ Mapper.prototype.executeCron = function () {
 
           async.parallel(mappers, function () {
             that.postMapPryv(generalContext, pryvContext, function () {
-              console.log('Mapped all accounts of', pryvContext.account.user);
+              console.log('[INFO]', (new Date()).valueOf(), 'Account: ',
+                pryvContext.account.user, 'mapped');
               if ((--accountCounter) === 0) {
                 that.postMapGeneral(generalContext, function () {
-                  console.log('Cronjob done.');
+                  console.log('[INFO]', (new Date()).valueOf(), 'CroneJob Done');
                 });
               }
             });
@@ -239,53 +235,3 @@ var createPreStreamCreationFunctions =
       );
     };
   };
-
-
-/**
- * Return the following errors, where
- *    timeout: wait
- *    resource-inaccessible: no right on stream -> deleted or moved
- *    auth-required: tokens invalid -> stop all
- *    user-intervention: something else invalid -> stop all
- *
- * @param error
- * @returns {string}
- */
-var errorResolver = function (error) {
-  switch (error.id) {
-    case 'invalid-request-structure': {
-      console.error(error.id, error);
-      return 'timeout';
-    }
-    case 'invalid-parameters-format': {
-      console.error(error.id, error);
-      return 'timeout';
-    }
-    case 'unknown-referenced-resource': {   // Stream was delete
-      return 'resource-inaccessible';
-    }
-    case 'invalid-access-token': {
-      return 'auth-required';
-    }
-    case 'forbidden': {
-      return 'auth-required';
-    }
-    case 'unknown-resource': {
-      return 'resource-inaccessible';
-    }
-    case 'user-account-relocated': {
-      return 'timeout';
-    }
-    case 'user-intervention-required': {
-      return 'user-intervention';
-    }
-    case 'API_UNREACHEABLE': {
-      return 'timeout';
-    }
-    default: {
-      return 'timeout';
-    }
-
-  }
-};
-

@@ -126,10 +126,13 @@ mapUtils.clearAllErrors = function (map, callback) {
   }, callback);
 };
 
-
-mapUtils.updateUpdateTimestamp = function (map) {
+/**
+ * Updates updates the last-update timestamps
+ * @param map
+ */
+mapUtils.updateTimestamps = function (map) {
   mapUtils.bfTraversalSync(map, function (node) {
-    if (mapUtils.isActiveNode(node)) {
+    if (mapUtils.isErrorFree(node)) {
       if (node.updateCurrent) {
         if (!node.updateLast) {
           node.updateLast = node.updateCurrent;
@@ -168,7 +171,6 @@ mapUtils.validateMap = function (map) {
   };
 };
 
-
 var validateStream = function (stream) {
   var error = null;
   var valid = true;
@@ -198,7 +200,6 @@ var validateStream = function (stream) {
       }
     }
   }
-
 
   if (!valid) {
     error = stream;
