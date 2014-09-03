@@ -48,6 +48,10 @@ module.exports = function (that, node, callback) {
         node.active = true;
         return callback(true);
       });
+    } else {
+      node.error = {};
+      node.active = true;
+      return callback(true);
     }
 
 

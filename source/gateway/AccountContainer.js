@@ -35,10 +35,14 @@ AccountContainer.prototype.createStreams = function (cb) {
         that.pryvAccount.user);
       return cb(error, null);
     } else {
+      console.log('[INFO]', (new Date()).valueOf(), 'Fetch stream successful for',
+        that.pryvAccount.user);
       mapUtils.bfTraversal(that.serviceAccount.mapping, function (node, callback) {
         if (mapUtils.isUsableNode(node)) {
+          console.log('[INFO]', (new Date()).valueOf(), 'Checking node', node.uid);
           createStream(that, node, callback);
         } else {
+          console.log('[ERROR]', (new Date()).valueOf(), 'Failed node', node.uid);
           return callback(false);
         }
       }, function () {
@@ -64,7 +68,7 @@ AccountContainer.prototype.batchCreateEvents = function (events, callback) {
   }
 
   if (!events || (events && events.length === 0)) {
-    mapUtils.updateUpdateTimestamp(this.serviceAccount.mapping);
+    mapUtils.updateTimestamps(this.serviceAccount.mapping);
     db.updateServiceAccount(this.pryvAccount.user, this.serviceAccount);
     //console.log('batchCreateEvents 1');
     return callback();
@@ -87,7 +91,7 @@ AccountContainer.prototype.batchCreateEvents = function (events, callback) {
     streams: streams,
     sortAscending: false
   }, function (error, ev) {
-    console.error('[ERROR]', JSON.stringify(error.message));
+
     if (!error) {
       var notFound = [];
       for (var i = 0, l = events.length; i < l; ++i) {
@@ -132,7 +136,7 @@ AccountContainer.prototype.batchCreateEvents = function (events, callback) {
             // will set error and reset last update on the node.
             setFailedStreams(this.serviceAccount.mapping, this.pryvAccount.user,
               this.serviceAccount, streams, error);
-            mapUtils.updateUpdateTimestamp(this.serviceAccount.mapping);
+            mapUtils.updateTimestamps(this.serviceAccount.mapping);
             return db.updateServiceAccount(this.pryvAccount.user, this.serviceAccount,
               function () {
                 return callback();
@@ -149,7 +153,7 @@ AccountContainer.prototype.batchCreateEvents = function (events, callback) {
           }
         }.bind(this));
       } else {
-        mapUtils.updateUpdateTimestamp(this.serviceAccount.mapping);
+        mapUtils.updateTimestamps(this.serviceAccount.mapping);
         return callback();
       }
     } else {
@@ -158,6 +162,7 @@ AccountContainer.prototype.batchCreateEvents = function (events, callback) {
       //}
       // In this case we failed to fetch the events and
       // set error and reset last update on the node.
+      console.error('[ERROR]', 'While fetching data', error);
       setFailedStreams(this.serviceAccount.mapping, this.pryvAccount.user,
         this.serviceAccount, streams, error);
       return callback();
