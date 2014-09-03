@@ -50,6 +50,9 @@ utils.errorResolver = function (error) {
     case 'forbidden': {
       return 'auth-required';
     }
+    case 'auth-required': {
+      return 'auth-required';
+    }
     case 'unknown-resource': {
       return 'resource-inaccessible';
     }
@@ -57,14 +60,14 @@ utils.errorResolver = function (error) {
       return 'timeout';
     }
     case 'user-intervention-required': {
-      return 'user-intervention';
+      return 'auth-required';
     }
     case 'API_UNREACHEABLE': {
-      console.warn('[WARN]', new Date(), 'Mapper ErrorResolver', error.message);
+      console.warn('[WARN]', new Date(), 'Mapper ErrorResolver unreachable', error.message);
       return 'timeout';
     }
     default: {
-      console.error('[ERROR]', new Date(), 'Mapper ErrorResolver', error);
+      console.error('[ERROR]', new Date(), 'Mapper ErrorResolver default', error);
       return 'timeout';
     }
   }

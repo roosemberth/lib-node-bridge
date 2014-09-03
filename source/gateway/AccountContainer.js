@@ -38,12 +38,7 @@ AccountContainer.prototype.createStreams = function (cb) {
       console.log('[INFO]', (new Date()).valueOf(), 'Fetch stream successful for',
         that.pryvAccount.user);
       mapUtils.bfTraversal(that.serviceAccount.mapping, function (node, callback) {
-        if (mapUtils.isUsableNode(node)) {
           createStream(that, node, callback);
-        } else {
-          console.log('[ERROR]', (new Date()).valueOf(), 'Failed node', node.uid);
-          return callback(false);
-        }
       }, function () {
         db.updateServiceAccount(that.pryvAccount.user, that.serviceAccount, function () {
           cb();
@@ -141,11 +136,6 @@ AccountContainer.prototype.batchCreateEvents = function (events, callback) {
                 return callback();
               });
           } else {
-            //if (error.id === 'API_UNREACHEABLE') {
-            //  error = null;
-            //}
-            // In this case we failed to push the events and
-            // set error and reset last update on the node.
             setFailedStreams(this.serviceAccount.mapping, this.pryvAccount.user,
               this.serviceAccount, streams, error);
             return callback();
@@ -156,11 +146,6 @@ AccountContainer.prototype.batchCreateEvents = function (events, callback) {
         return callback();
       }
     } else {
-      //if (error.id === 'API_UNREACHEABLE') {
-      //  error = null;
-      //}
-      // In this case we failed to fetch the events and
-      // set error and reset last update on the node.
       console.error('[ERROR]', 'While fetching data', error);
       setFailedStreams(this.serviceAccount.mapping, this.pryvAccount.user,
         this.serviceAccount, streams, error);
@@ -172,18 +157,24 @@ AccountContainer.prototype.batchCreateEvents = function (events, callback) {
 
 
 var setFailedStreams = function (map, pryvUser, serviceAccount, streams, error) {
+  console.log('setFailedStreams', 'start');
   mapUtils.bfTraversalSync(map, function (node) {
     if (streams instanceof Array) {
       if (_.indexOf(streams, node.id) !== -1) {
         delete node.updateCurrent;
         node.error = error;
+        node.error.id = utils.errorResolver(error);
       }
     } else if (!!streams[node.id]) {
       delete node.updateCurrent;
       node.error = streams[node.id];
+      node.error.id = utils.errorResolver(error);
     }
+    console.log( node.error.id);
     return true;
   });
+  console.log('setFailedStreams', 'end');
+
   db.updateServiceAccount(pryvUser, serviceAccount, function () {
   });
 };

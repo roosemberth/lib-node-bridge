@@ -1,9 +1,11 @@
 var utils = require('../utils/utils.js');
+var mapUtils = require('../utils/mapUtils.js');
 
 module.exports = function (that, node, callback) {
 
   var stream;
-  var streamId = generatedStreamId(that, node);
+  var streamId = mapUtils.generateStreamIdFromConfig(that, node);
+  node.id = streamId;
   var parentStream;
   var parentStreamId = node.parentId;
 
@@ -19,37 +21,49 @@ module.exports = function (that, node, callback) {
     parentStream = null;
   }
 
+  console.log(streamId, parentStreamId);
+  console.log('[DEBUG]', 'here', 1);
   // Doest it exist?
   var changed = false;
   if (stream) {
     if (node.parentId && stream.parentId === null) {
       if (!parentStream) {
+        console.log('[DEBUG]', 'here', 2);
         // Critical Error, parent does not exist...
+        console.log('that s critical...');
       } else {
+        console.log('[DEBUG]', 'here', 3);
         var name = findUsableChildName(parentStream, node.defaultName);
         stream.parentId = node.parentId;
         stream.name = name;
         changed = true;
       }
+      console.log('[DEBUG]', 'here', 4);
     } // right place, maybe set defaultClientData
+    console.log('[DEBUG]', 'here', 5);
     changed = setDefaultClientData(node, stream) || changed;
     setChildrensParentId(node, stream.id);
 
     // MOVE IT, if changes
     if (changed) {
+      console.log('[DEBUG]', 'here', 6);
       return that.connection.streams.update(stream, function (error) {
         if (error) {
+          console.log('[DEBUG]', 'here', 7);
           node.error = error;
           node.error.id = utils.errorResolver(error);
           console.error('[ERROR]', (new Date()).valueOf(), 'User', that.connection.username,
             'Stream', stream.id, 'moving failed', node.error.id);
           return callback(false);
+        } else {
+          console.log('[DEBUG]', 'here', 8);
+          node.error = {};
+          node.active = true;
+          return callback(true);
         }
-        node.error = {};
-        node.active = true;
-        return callback(true);
       });
     } else {
+      console.log('[DEBUG]', 'here', 9);
       node.error = {};
       node.active = true;
       return callback(true);
@@ -57,11 +71,13 @@ module.exports = function (that, node, callback) {
 
 
   } else {
+    console.log('[DEBUG]', 'here', 10);
     stream = {
       id: streamId,
       parentId: parentStreamId
     };
     setDefaultClientData(node, stream);
+    console.log('[DEBUG]', 'here', 11, stream);
     // It might exist try to create it, or die
     return nameIncrementalCreation(that, node, stream, callback);
   }
@@ -79,6 +95,8 @@ var nameIncrementalCreation = function (that, node, stream, done) {
   var incrCreate = function (counter) {
     stream.name = counter ? node.defaultName + ' (' + counter + ')' : node.defaultName;
 
+    console.log('nameIncrementalCreation', stream.name);
+
     if (counter > 10) {
       console.error('[ERROR]', (new Date()).valueOf(), 'User', that.connection.username,
         'Stream creation failed, existing stream with same name (0-10)');
@@ -95,7 +113,7 @@ var nameIncrementalCreation = function (that, node, stream, done) {
         var stdErr = utils.errorResolver(error);
         if (error.id === 'item-already-exists') {
           if (error.data.name) {
-            return incrCreate(node.defaultName, ++counter);
+            return incrCreate(++counter);
           } else  {
             console.error('[ERROR]', (new Date()).valueOf(), 'User', that.connection.username,
               'Stream creation failed, due to already existing stream',
@@ -125,35 +143,18 @@ var nameIncrementalCreation = function (that, node, stream, done) {
   incrCreate(0);
 };
 
-
-
-var generatedStreamId = function (that, node) {
-  var streamId = node.id;
-  if (node.creationSettings.prefixSidWithParent && !node.id) {
-    streamId += node.parentId + '-';
-  }
-  if (!node.id) {
-    streamId += node.defaultId;
-  }
-  if (node.creationSettings.postfixSidWithServiceId && !node.id) {
-    streamId += '-' + that.serviceAccount.aid;
-  }
-  return streamId;
-};
-
-
 var findUsableChildName = function (parentStream, defaultName) {
   var streamName = '';
   if (parentStream.children) {
     for (var k = 0, found = false; !found; ++k) {
       streamName = k ? defaultName + ' (' + k + ')' : defaultName;
+      console.log(streamName, found);
       for (var i = 0, l = parentStream.children.length; i < l && !found; ++i) {
-        if (parentStream.children[i].name === defaultName) {
+        if (parentStream.children[i].name === streamName) {
           found = true;
         }
       }
       if (!found) {
-        streamName = defaultName;
         break;
       } else {
         found = false;

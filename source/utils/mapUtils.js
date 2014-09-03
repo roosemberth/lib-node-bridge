@@ -176,7 +176,7 @@ var validateStream = function (stream) {
   var valid = true;
 
   valid = valid && stream.hasOwnProperty('defaultName');
-  valid = valid && stream.hasOwnProperty('id');
+  valid = valid && stream.hasOwnProperty('defaultId');
   valid = valid && stream.hasOwnProperty('uid');
   valid = valid && stream.hasOwnProperty('active');
   valid = valid && stream.hasOwnProperty('creationSettings');
@@ -227,4 +227,20 @@ var validateEvent = function (event) {
     valid: valid,
     error: error
   };
+};
+
+
+mapUtils.generateStreamIdFromConfig = function (that, node) {
+  if (node.id && node.id.length) {
+    return node.id;
+  }
+  var streamId = '';
+  if (node.creationSettings.prefixSidWithParent) {
+    streamId += node.parentId + '-';
+  }
+  streamId += node.defaultId;
+  if (node.creationSettings.postfixSidWithServiceId) {
+    streamId += '-' + that.serviceAccount.aid;
+  }
+  return streamId;
 };
