@@ -32,7 +32,8 @@ module.exports = function (that, node, callback) {
         changed = true;
       }
     } // right place, maybe set defaultClientData
-    changed = changed || setDefaultClientData(node, stream);
+    changed = setDefaultClientData(node, stream) || changed;
+    setChildrensParentId(node, stream.id);
 
     // MOVE IT, if changes
     if (changed) {
@@ -121,7 +122,6 @@ var nameIncrementalCreation = function (that, node, stream, done) {
       return done(true);
     });
   };
-
   incrCreate(0);
 };
 
@@ -154,6 +154,7 @@ var findUsableChildName = function (parentStream, defaultName) {
       }
       if (!found) {
         streamName = defaultName;
+        break;
       } else {
         found = false;
       }
@@ -164,9 +165,9 @@ var findUsableChildName = function (parentStream, defaultName) {
 
 
 var setChildrensParentId = function (node, parentId) {
-  if (node.children) {
-    for (var i = 0, l = node.children.length; i < l; ++i) {
-      node.children[i].parentId = parentId;
+  if (node.streams) {
+    for (var i = 0, l = node.streams.length; i < l; ++i) {
+      node.streams[i].parentId = parentId;
     }
   }
 };

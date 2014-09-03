@@ -39,7 +39,6 @@ AccountContainer.prototype.createStreams = function (cb) {
         that.pryvAccount.user);
       mapUtils.bfTraversal(that.serviceAccount.mapping, function (node, callback) {
         if (mapUtils.isUsableNode(node)) {
-          console.log('[INFO]', (new Date()).valueOf(), 'Checking node', node.uid);
           createStream(that, node, callback);
         } else {
           console.log('[ERROR]', (new Date()).valueOf(), 'Failed node', node.uid);
