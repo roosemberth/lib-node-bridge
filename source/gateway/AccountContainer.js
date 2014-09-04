@@ -193,6 +193,10 @@ var setFailedStreams = function (map, pryvUser, serviceAccount, streams, error) 
         node.error.id = utils.errorResolver(error);
         console.log('[ERROR]', pryvUser, 'setting failed stream of array in',
           node.uid, node.id, node.error.id);
+        if (node.error.id === 'auth-required' ||
+          node.error.id === 'resource-inaccessible') {
+          node.active = false;
+        }
       }
     } else if (!!streams[node.id]) {
       delete node.updateCurrent;
@@ -200,6 +204,10 @@ var setFailedStreams = function (map, pryvUser, serviceAccount, streams, error) 
       node.error.id = utils.errorResolver(error);
       console.log('[ERROR]', pryvUser, 'setting failed stream of map in',
         node.uid, node.id, node.error.id);
+      if (node.error.id === 'auth-required' ||
+        node.error.id === 'resource-inaccessible') {
+        node.active = false;
+      }
     }
     return true;
   });
