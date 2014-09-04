@@ -3,6 +3,10 @@ var mapUtils = require('../utils/mapUtils.js');
 
 module.exports = function (that, node, callback) {
 
+  if (!node.active) {
+    return callback(false);
+  }
+
   var stream;
   var streamId = mapUtils.generateStreamIdFromConfig(that, node);
   node.id = streamId;
@@ -117,7 +121,8 @@ var nameIncrementalCreation = function (that, node, stream, done) {
             'Creation of stream', stream.id,'failed', '\n', error);
           error.id = stdErr;
           node.error = error;
-          if (node.error === 'forbidden') {
+          if (node.error.id === 'auth-required' ||
+            node.error.id === 'resource-inaccessible') {
             node.active = false;
           }
           return done(false);
