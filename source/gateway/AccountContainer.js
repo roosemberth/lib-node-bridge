@@ -191,11 +191,15 @@ var setFailedStreams = function (map, pryvUser, serviceAccount, streams, error) 
         delete node.updateCurrent;
         node.error = error;
         node.error.id = utils.errorResolver(error);
+        console.log('[ERROR]', pryvUser, 'setting failed stream of array in',
+          node.uid, node.id, node.error.id);
       }
     } else if (!!streams[node.id]) {
       delete node.updateCurrent;
       node.error = streams[node.id];
       node.error.id = utils.errorResolver(error);
+      console.log('[ERROR]', pryvUser, 'setting failed stream of map in',
+        node.uid, node.id, node.error.id);
     }
     return true;
   });

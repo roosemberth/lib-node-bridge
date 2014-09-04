@@ -34,13 +34,9 @@ utils.isStaging = function () {
 utils.errorResolver = function (error) {
   switch (error.id) {
     case 'invalid-request-structure': {
-      console.error('[ERROR]', (new Date()).valueOf(),
-        'Mapper ErrorResolver', 'invalid-request-structure');
       return 'timeout';
     }
     case 'invalid-parameters-format': {
-      console.error('[ERROR]', (new Date()).valueOf(),
-        'Mapper ErrorResolver', 'invalid-parameters-format');
       return 'timeout';
     }
     case 'unknown-referenced-resource': {   // Stream was delete
@@ -65,13 +61,9 @@ utils.errorResolver = function (error) {
       return 'auth-required';
     }
     case 'API_UNREACHEABLE': {
-      console.warn('[WARN]', (new Date()).valueOf(),
-        'Mapper ErrorResolver unreachable', error.id);
       return 'timeout';
     }
     default: {
-      console.error('[ERROR]',(new Date()).valueOf(),
-        'Mapper ErrorResolver default', error.id);
       return 'timeout';
     }
   }
