@@ -174,7 +174,7 @@ angular.module('pryvBridge.controllers', []).
         };
       } else {
         _.defer(function ($rs, $l) {
-          $l.path('/signin-pryv/');
+          $l.path('/signin-pryv');
           $rs.$apply();
         }, $rootScope, $location);
       }

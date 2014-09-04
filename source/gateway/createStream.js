@@ -59,8 +59,6 @@ module.exports = function (that, node, callback) {
       node.active = true;
       return callback(true);
     }
-
-
   } else {
     stream = {
       id: streamId,
@@ -105,17 +103,19 @@ var nameIncrementalCreation = function (that, node, stream, done) {
               'Stream creation failed, due to already existing stream',
               'Should: parentId:', stream.parentId, 'id', stream.id,
               'name', stream.name, '\n', error);
+            error.id = stdErr;
             node.error = error;
             node.active = false;
             return done(false);
           }
         } else if (stdErr === 'timeout') {
-          node.error = error;
           error.id = stdErr;
+          node.error = error;
           return done(false); // failed due to timeout, retry later.
         } else {
           console.error('[ERROR]', (new Date()).valueOf(), 'User', that.connection.username,
             'Creation of stream', stream.id,'failed', '\n', error);
+          error.id = stdErr;
           node.error = error;
           return done(false);
         }

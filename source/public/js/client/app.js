@@ -27,7 +27,9 @@ config(function ($routeProvider, $locationProvider) {
       controller: 'ConfigureCtrl'
     }).
     otherwise({
-      redirectTo: '/signin-pryv' + location.search
+      redirectTo: function() {
+        return '/signin-pryv' + location.search;
+      }
     });
 
   $locationProvider.html5Mode(true);

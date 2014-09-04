@@ -173,7 +173,8 @@ AccountContainer.prototype.batchPartCreateEvents = function (events, callback) {
         return callback();
       }
     } else {
-      console.error('[ERROR]', 'While fetching data', error);
+      console.error('[ERROR]', (new Date()).valueOf(), this.pryvAccount.user,
+        'While fetching data', error.id);
       setFailedStreams(this.serviceAccount.mapping, this.pryvAccount.user,
         this.serviceAccount, streams, error);
       return callback();
