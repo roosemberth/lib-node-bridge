@@ -203,11 +203,6 @@ Mapper.prototype.executeCron = function () {
         });
       });
     });
-    if (!calledForEachAtLeastOnce) {
-      that.postMapGeneral(generalContext, function () {
-        console.log('[INFO]', (new Date()).valueOf(), 'CroneJob Done');
-      });
-    }
   });
 };
 
