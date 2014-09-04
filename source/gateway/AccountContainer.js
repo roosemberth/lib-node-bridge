@@ -5,6 +5,7 @@ var UserProvider = require('../provider/UserProvider.js');
 var db = new UserProvider();
 var mapUtils = require('../utils/mapUtils.js');
 var createStream = require('./createStream.js');
+var async = require('async');
 
 
 var AccountContainer = module.exports = function (pryvAccount, serviceAccount, connection) {
@@ -54,7 +55,31 @@ AccountContainer.prototype.createStreams = function (cb) {
  * @param {Array} events of Pryv's event-like
  * @param {function} callback called when done
  */
+
 AccountContainer.prototype.batchCreateEvents = function (events, callback) {
+  var s = JSON.stringify(events);
+  if (s.length > 1024 * 512) {
+    var avgEventSize = 4 * s.length / events.length;
+    var batchSize = Math.floor(1024 * 1024 / avgEventSize);
+    var batches = [];
+    for (var i = 0; i < events.length; i += batchSize) {
+      var end = i + batchSize > events.length ? events.length : i + batchSize;
+      var slice = events.slice(i, end);
+      batches.push(createBatchFunction(this, slice));
+    }
+    return async.parallel(batches, callback);
+  } else {
+    return this.batchPartCreateEvents(events, callback);
+  }
+};
+
+var createBatchFunction = function (that, events) {
+  return function (done) {
+    return that.batchPartCreateEvents(events, done);
+  };
+};
+
+AccountContainer.prototype.batchPartCreateEvents = function (events, callback) {
 
   if (typeof(callback) !== 'function') {
     callback = function () {
