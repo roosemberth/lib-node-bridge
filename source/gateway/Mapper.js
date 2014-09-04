@@ -155,7 +155,9 @@ Mapper.prototype.executeCron = function () {
     generalContext.generalResult = generalResult;
 
     var accountCounter = 0;
+    var calledForEachAtLeastOnce = false;
     that.database.forEachAccount(function (account) {
+      calledForEachAtLeastOnce = true;
       accountCounter++;
       process.nextTick(function () {
         var pryvContext = {
@@ -201,6 +203,11 @@ Mapper.prototype.executeCron = function () {
         });
       });
     });
+    if (!calledForEachAtLeastOnce) {
+      that.postMapGeneral(generalContext, function () {
+        console.log('[INFO]', (new Date()).valueOf(), 'CroneJob Done');
+      });
+    }
   });
 };
 
