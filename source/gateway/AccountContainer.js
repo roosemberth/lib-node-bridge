@@ -110,9 +110,11 @@ AccountContainer.prototype.batchCreateEvents = function (events, callback) {
         }
       }
 
+      /*
       console.log('ev.length', ev.length);
       console.log('events.length', events.length);
       console.log('notFound.length', notFound.length);
+*/
 
       if (notFound.length !== 0) {
         return this.connection.events.batchWithData(notFound, function (error, results) {
@@ -157,7 +159,6 @@ AccountContainer.prototype.batchCreateEvents = function (events, callback) {
 
 
 var setFailedStreams = function (map, pryvUser, serviceAccount, streams, error) {
-  console.log('setFailedStreams', 'start');
   mapUtils.bfTraversalSync(map, function (node) {
     if (streams instanceof Array) {
       if (_.indexOf(streams, node.id) !== -1) {
@@ -170,11 +171,8 @@ var setFailedStreams = function (map, pryvUser, serviceAccount, streams, error) 
       node.error = streams[node.id];
       node.error.id = utils.errorResolver(error);
     }
-    console.log( node.error.id);
     return true;
   });
-  console.log('setFailedStreams', 'end');
-
   db.updateServiceAccount(pryvUser, serviceAccount, function () {
   });
 };
