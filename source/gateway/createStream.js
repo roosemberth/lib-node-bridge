@@ -117,6 +117,9 @@ var nameIncrementalCreation = function (that, node, stream, done) {
             'Creation of stream', stream.id,'failed', '\n', error);
           error.id = stdErr;
           node.error = error;
+          if (node.error === 'forbidden') {
+            node.active = false;
+          }
           return done(false);
         }
       }
