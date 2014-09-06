@@ -1,4 +1,5 @@
 var _ = require('underscore');
+var async = require('async');
 
 /**
  * All callback in here are of the form function(result, error)
@@ -51,7 +52,6 @@ Mapper.implement = function (constructor, members) {
  * @param callback function(error, result)
  */
 Mapper.prototype.preMapGeneral = function (generalContext, callback) {
-  console.log('[INFO]', (new Date()).valueOf(), 'Mapper.prototype.preMapGeneral');
   callback(null, null);
 };
 
@@ -62,7 +62,6 @@ Mapper.prototype.preMapGeneral = function (generalContext, callback) {
  * @param callback function(error, result)
  */
 Mapper.prototype.preMapPryv = function (generalContext, pryvContext, callback) {
-  console.log('[INFO]', (new Date()).valueOf(), 'Mapper.prototype.preMapPryv');
   callback(null, null);
 };
 
@@ -75,7 +74,6 @@ Mapper.prototype.preMapPryv = function (generalContext, pryvContext, callback) {
  */
 Mapper.prototype.preStreamCreation =
   function (generalContext, pryvContext, accountContainer, callback) {
-    console.log('[INFO]', (new Date()).valueOf(), 'Mapper.prototype.preStreamCreation');
     callback(null, null);
   };
 
@@ -88,7 +86,6 @@ Mapper.prototype.preStreamCreation =
  */
 Mapper.prototype.preMapService =
   function (generalContext, pryvContext, accountContainer, callback) {
-    console.log('[INFO]', (new Date()).valueOf(), 'Mapper.prototype.preMapService');
     callback(null, null);
   };
 
@@ -113,7 +110,6 @@ Mapper.prototype.map = function (generalContext, pryvContext, accountContainer, 
  */
 Mapper.prototype.postMapService =
   function (generalContext, pryvContext, accountContainer, callback) {
-    console.log('[INFO]', (new Date()).valueOf(), 'Mapper.prototype.postMapService');
     callback(null, null);
   };
 
@@ -125,7 +121,6 @@ Mapper.prototype.postMapService =
  * @param callback function(error, result)
  */
 Mapper.prototype.postMapPryv = function (generalContext, pryvContext, callback) {
-  console.log('[INFO]', (new Date()).valueOf(), 'Mapper.prototype.postMapPryv');
   callback(null, null);
 };
 
@@ -135,105 +130,193 @@ Mapper.prototype.postMapPryv = function (generalContext, pryvContext, callback) 
  * @param callback function(error, result)
  */
 Mapper.prototype.postMapGeneral = function (generalContext, callback) {
-  console.log('[INFO]', (new Date()).valueOf(), 'Mapper.prototype.postMapGeneral');
   callback(null, null);
 };
 
 
 /**
- * This is the cronjob.
+ * Helper function for executeCron
  */
-Mapper.prototype.executeCron = function () {
-  console.log('[INFO]', (new Date()).valueOf(), 'Mapper.prototype.executeCron');
-
-  var that = this;
-  var generalContext = {};
-  that.preMapGeneral(generalContext, function (error, generalResult) {
-    if (error) {
-      return;
-    }
-    generalContext.generalResult = generalResult;
-
-    var accountCounter = 0;
-    var calledForEachAtLeastOnce = false;
-    that.database.forEachAccount(function (account) {
-      calledForEachAtLeastOnce = true;
-      accountCounter++;
-      process.nextTick(function () {
-        var pryvContext = {
-          account: account.pryv,
-          connection: new pryv.Connection({
-            username: account.pryv.user,
-            auth: account.pryv.token,
-            staging: utils.isStaging()
-          })
-        };
-        that.preMapPryv(generalContext, pryvContext, function (error, pryvResult) {
-          if (error) {
-            return;
-          }
-
-          var service = account.service;
-          var mappers = [];
-          pryvContext.pryvResult = pryvResult;
-
-          for (var i = 0; i < service.accounts.length; ++i) {
-            console.log('[INFO]', (new Date()).valueOf(), 'Account:',
-              pryvContext.account.user, service.accounts[i].aid);
-            var currentAccount = new AccountContainer(
-              pryvContext.account, service.accounts[i], pryvContext.connection);
-            currentAccount.streamFlattenMap();
-            currentAccount.eventFlattenMap();
-            var fn = createPreStreamCreationFunctions(that, generalContext,
-              pryvContext, currentAccount);
-            mappers.push(fn);
-          }
-
-          async.parallel(mappers, function () {
-            that.postMapPryv(generalContext, pryvContext, function () {
-              console.log('[INFO]', (new Date()).valueOf(), 'Account: ',
-                pryvContext.account.user, 'mapped');
-              if ((--accountCounter) === 0) {
-                that.postMapGeneral(generalContext, function () {
-                  console.log('[INFO]', (new Date()).valueOf(), 'CroneJob Done');
-                });
-              }
-            });
-          });
-        });
+var fnService = function (that, gc, pc, ac, callback) {
+  async.series([
+    // preStreamCreation
+    function (done) {
+      console.log('[INFO]', (new Date()).valueOf(), 'START: preStreamCreation',
+        pc.account.user, ac.serviceAccount.aid);
+      ac.streamFlattenMap();
+      ac.eventFlattenMap();
+      that.preStreamCreation(gc, pc, ac, function (err, res) {
+        console.log('[INFO]', (new Date()).valueOf(), 'DONE: preStreamCreation',
+          pc.account.user, ac.serviceAccount.aid);
+        if (err) {
+          return done(err);
+        } else {
+          ac.preStreamCreationResult = res;
+          ac.streamFlattenMap();
+          ac.eventFlattenMap();
+          return done();
+        }
       });
-    });
+    },
+    // preMapService
+    function (done) {
+      console.log('[INFO]', (new Date()).valueOf(), 'START: preMapService',
+        pc.account.user, ac.serviceAccount.aid);
+      that.preMapService(gc, pc, ac, function (err, res) {
+        console.log('[INFO]', (new Date()).valueOf(), 'DONE: preMapService',
+          pc.account.user, ac.serviceAccount.aid);
+        if (err) {
+          return done(err);
+        } else {
+          ac.preMapServiceResult = res;
+          return done();
+        }
+      });
+    },
+    // map
+    function (done) {
+      console.log('[INFO]', (new Date()).valueOf(), 'START: map',
+        pc.account.user, ac.serviceAccount.aid);
+      that.map(gc, pc, ac, function (err, res) {
+        console.log('[INFO]', (new Date()).valueOf(), 'DONE: map',
+          pc.account.user, ac.serviceAccount.aid);
+        if (err) {
+          return done(err);
+        } else {
+          ac.mapResult = res;
+          return done();
+        }
+      });
+    },
+    // postMapService
+    function (done) {
+      console.log('[INFO]', (new Date()).valueOf(), 'START: postMapService',
+        pc.account.user, ac.serviceAccount.aid);
+      that.postMapService(gc, pc, ac, function (err, res) {
+        console.log('[INFO]', (new Date()).valueOf(), 'DONE: postMapService',
+          pc.account.user, ac.serviceAccount.aid);
+        if (err) {
+          return done(err);
+        } else {
+          ac.postMapServiceResult = res;
+          return done();
+        }
+      });
+    }
+  ], function () {
+    callback();
   });
 };
 
-var createPreStreamCreationFunctions =
-  function (that, generalContext, pryvContext, currentAccount) {
-    return function (done) {
-      that.preStreamCreation(generalContext, pryvContext, currentAccount,
-        function (error, result) {
-          currentAccount.preStreamCreationResult = result;
-          if (error) {
-            return done();
-          }
-          currentAccount.createStreams(function () {
-            that.preMapService(generalContext, pryvContext, currentAccount,
-              function (error, result) {
-                currentAccount.preMapServiceResult = result;
-                if (error) {
-                  return done();
-                }
-                that.map(generalContext, pryvContext, currentAccount, function (error, result) {
-                  currentAccount.mapResult = result;
-                  that.postMapService(generalContext, pryvContext, currentAccount,
-                    function (error, result) {
-                      currentAccount.postMapServiceResult = result;
-                      return done();
-                    });
-                });
+/**
+ * Helper function for executeCron
+ */
+var createFnService = function (that, gc, pc, ac) {
+  return function (done) {
+    // here we have to get the lock
+    that.database.lockAccount(pc.account.user, ac.serviceAccount.aid,
+      function (success, account) {
+        if (success) {
+          ac.serviceAccount = account;
+          console.log('[INFO]', 'Could lock ', pc.account.user, ac.serviceAccount.aid, account.lock);
+          fnService(that, gc, pc, ac, function () {
+            that.database.unlockAccount(pc.account.user, ac.serviceAccount.aid,
+              function (result, account) {
+                console.log('[INFO]', 'Released lock ', pc.account.user, ac.serviceAccount.aid, account.lock);
+                return done();
               }
             );
           });
+        } else {
+          console.log('[INFO]', 'Could not acquire lock for', pc.account.user, ac.serviceAccount.aid);
+          return done();
         }
-      );
-    };
+      }
+    );
   };
+};
+
+/**
+ * Helper function for executeCron
+ */
+var createFnAccount = function (that, gc, pc, callback) {
+  return function () {
+    var serviceFunctions = [];
+    for (var i = 0; i < pc.service.accounts.length; ++i) {
+      var sAcc = pc.service.accounts[i];
+      var ac = new AccountContainer(pc.account, sAcc, pc.connection);
+      serviceFunctions.push(createFnService(that, gc, pc, ac));
+    }
+    async.parallel(serviceFunctions, function () {
+      return callback();
+    });
+  };
+};
+
+
+/**
+ * Executes the cron for every account in the database
+ */
+Mapper.prototype.executeCron = function () {
+  var that = this;
+  var gc = {};
+  async.series([
+    function (done) {
+      console.log('[INFO]', (new Date()).valueOf(), 'START: postMapGeneral');
+      that.preMapGeneral(gc, function (err, gr) {
+        console.log('[INFO]', (new Date()).valueOf(), 'DONE: postMapGeneral');
+        gc.preMapGeneralResult = gr;
+        if (err) {
+          return done();
+        }
+        that.database.forEachAccount(function (account) {
+          var pc = {
+            account: account.pryv,
+            service: account.service,
+            connection: new pryv.Connection({
+              username: account.pryv.user,
+              auth: account.pryv.token,
+              staging: utils.isStaging()
+            })
+          };
+
+          async.series([
+            // preMapPryv
+            function (done) {
+              console.log('[INFO]', (new Date()).valueOf(), 'START: preMapPryv', account.pryv.user);
+              that.preMapPryv(gc, pc, function (err, pr) {
+                console.log('[INFO]', (new Date()).valueOf(), 'DONE: preMapPryv', account.pryv.user);
+                pc.preMapPryvResult = pr;
+                if (err) {
+                  done(err);
+                } else {
+                  var doEveryAccount = createFnAccount(that, gc, pc, done);
+                  process.nextTick(doEveryAccount);
+                }
+              });
+            },
+            // postMapPrv
+            function (done) {
+              console.log('[INFO]', (new Date()).valueOf(), 'START: postMapPryv');
+              that.postMapPryv(gc, pc, function () {
+                console.log('[INFO]', (new Date()).valueOf(), 'DONE: postMapGeneral');
+                done();
+              });
+            }
+          ], function () {
+            return done();
+          });
+        });
+      });
+    },
+    function (done) {
+      console.log('[INFO]', (new Date()).valueOf(), 'START: postMapGeneral');
+      that.postMapGeneral(gc, function () {
+        console.log('[INFO]', (new Date()).valueOf(), 'DONE: postMapGeneral');
+        return done();
+      });
+    }
+  ], function () {
+    console.log('[INFO]', (new Date()).valueOf(), 'CroneJob Done');
+  });
+};

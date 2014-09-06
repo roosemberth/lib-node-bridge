@@ -89,7 +89,6 @@ AccountContainer.prototype.batchPartCreateEvents = function (events, callback) {
   if (!events || (events && events.length === 0)) {
     mapUtils.updateTimestamps(this.serviceAccount.mapping);
     db.updateServiceAccount(this.pryvAccount.user, this.serviceAccount);
-    //console.log('batchCreateEvents 1');
     return callback();
   }
 

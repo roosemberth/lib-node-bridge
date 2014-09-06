@@ -22,6 +22,7 @@ var UserProvider = module.exports = function () {
   }
   if (this instanceof UserProvider) {
     dbClientInstance = this;
+    this.startTime = (new Date()).valueOf();
     userDb.open(function (err, db) {
       if (!err) {
         console.log('Connected to \"' + config.get('database:name') + '\" database');
@@ -487,5 +488,69 @@ UserProvider.prototype.forEachAccount = function (fn) {
         fn(item);
       }
     });
+  });
+};
+
+
+/* account locking function */
+
+UserProvider.prototype.lockAccount = function (username, serviceId, callback) {
+  var that = this;
+  this.getServiceAccount(username, serviceId, function (error, account) {
+    if (error || !account) {
+      return callback(false, account);
+    } else {
+      var currentDate = (new Date()).valueOf();
+      if (account.lock) {
+        if (account.lock.status) { // locked
+          if (!account.lock.time || (currentDate - account.lock.time) > 3600000 ||
+            account.lock.time < (that.startTime- 900000)) {
+            account.lock.status = true;
+            account.lock.time = currentDate;
+          } else {
+            return callback(false, account);
+          }
+        } else {
+          if (currentDate - account.lock.time > 900000) {
+            account.lock.status = true;
+            account.lock.time = currentDate;
+          } else {
+            return callback(false, account);
+          }
+        }
+      } else {
+        account.lock.status = true;
+        account.lock.time = currentDate;
+      }
+      that.updateServiceAccount(username, account, function (error, result) {
+        if (!error) {
+          return callback(true, result);
+        } else {
+          return callback(false, result);
+        }
+      });
+    }
+  });
+};
+
+UserProvider.prototype.unlockAccount = function (username, serviceId, callback) {
+  var that = this;
+  this.getServiceAccount(username, serviceId, function (error, account) {
+    if (error || !account) {
+      return callback(false, account);
+    } else {
+      var currentDate = (new Date()).valueOf();
+      account.lock = {
+        status: false,
+        time: currentDate
+      };
+      that.updateServiceAccount(username, account, function (error, account) {
+        if (!error) {
+          return callback(true, account);
+        } else {
+          return callback(false, account);
+        }
+      });
+    }
   });
 };
