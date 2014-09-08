@@ -519,8 +519,10 @@ UserProvider.prototype.lockAccount = function (username, serviceId, callback) {
           }
         }
       } else {
-        account.lock.status = true;
-        account.lock.time = currentDate;
+        account.lock = {
+          status: true,
+          time: currentDate
+          };
       }
       that.updateServiceAccount(username, account, function (error, result) {
         if (!error) {
