@@ -460,18 +460,24 @@ UserProvider.prototype.setServiceUser = function (serviceUserId, user, callback)
  * (pryvAccount, serviceAccount)
  * @param fn the execute function (pryvAccount, serviceAcount)
  */
-UserProvider.prototype.forEachUser = function (fn) {
+UserProvider.prototype.forEachUser = function (fn, finalCb) {
   userDb.collection(config.get('database:userCollection'), function (error, collection) {
-    var cursor = collection.find();
-    cursor.each(function (err, item) {
-      if (item !== null) {
-        var pryv = item.pryv;
-        var service = item.service;
-        for (var i = 0; i < service.accounts.length; ++i) {
-          fn(pryv, service.accounts[i]);
+    collection.find().toArray(
+      function (err, docs) {
+        if (err) {
+          return finalCb();
         }
+        for (var i = 0, l = docs.length; i < l; ++i) {
+          var item = docs;
+          var pryv = item.pryv;
+          var service = item.service;
+          for (var j = 0; j < service.accounts.length; ++j) {
+            fn(pryv, service.accounts[j]);
+          }
+        }
+        return finalCb();
       }
-    });
+    );
   });
 };
 
@@ -480,14 +486,19 @@ UserProvider.prototype.forEachUser = function (fn) {
  * (pryvAccount, serviceAccount)
  * @param fn the execute function (account)
  */
-UserProvider.prototype.forEachAccount = function (fn) {
+UserProvider.prototype.forEachAccount = function (fn, finalCb) {
   userDb.collection(config.get('database:userCollection'), function (error, collection) {
-    var cursor = collection.find();
-    cursor.each(function (err, item) {
-      if (item !== null) {
-        fn(item);
+    collection.find().toArray(
+      function (err, docs) {
+        if (err) {
+          return finalCb();
+        }
+        for (var i = 0, l = docs.length; i < l; ++i) {
+          fn(docs[i]);
+        }
+        return finalCb();
       }
-    });
+    );
   });
 };
 

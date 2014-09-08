@@ -254,6 +254,39 @@ var createFnAccount = function (that, gc, pc, callback) {
 };
 
 
+
+var createFnPryv = function (that, gc, pc) {
+return function (done) {
+  async.series([
+    // preMapPryv
+    function (stepDone) {
+      console.log('[INFO]', (new Date()).valueOf(), 'START: preMapPryv', pc.account.user);
+      that.preMapPryv(gc, pc, function (err, pr) {
+        console.log('[INFO]', (new Date()).valueOf(), 'DONE: preMapPryv', pc.account.user);
+        pc.preMapPryvResult = pr;
+        if (err) {
+          stepDone(err);
+        } else {
+          var doEveryAccount = createFnAccount(that, gc, pc, done);
+          process.nextTick(doEveryAccount);
+        }
+      });
+    },
+    // postMapPrv
+    function (stepDone) {
+      console.log('[INFO]', (new Date()).valueOf(), 'START: postMapPryv', pc.account.user);
+      that.postMapPryv(gc, pc, function () {
+        console.log('[INFO]', (new Date()).valueOf(), 'DONE: postMapGeneral', pc.account.user);
+        stepDone();
+      });
+    }
+  ], function () {
+    return done();
+  });
+};
+};
+
+
 /**
  * Executes the cron for every account in the database
  */
@@ -262,13 +295,14 @@ Mapper.prototype.executeCron = function () {
   var gc = {};
   async.series([
     function (done) {
-      console.log('[INFO]', (new Date()).valueOf(), 'START: postMapGeneral');
+      console.log('[INFO]', (new Date()).valueOf(), 'START: preMapGeneral');
       that.preMapGeneral(gc, function (err, gr) {
-        console.log('[INFO]', (new Date()).valueOf(), 'DONE: postMapGeneral');
+        console.log('[INFO]', (new Date()).valueOf(), 'DONE: preMapGeneral');
         gc.preMapGeneralResult = gr;
         if (err) {
           return done();
         }
+        var fns = [];
         that.database.forEachAccount(function (account) {
           var pc = {
             account: account.pryv,
@@ -279,33 +313,9 @@ Mapper.prototype.executeCron = function () {
               staging: utils.isStaging()
             })
           };
-
-          async.series([
-            // preMapPryv
-            function (done) {
-              console.log('[INFO]', (new Date()).valueOf(), 'START: preMapPryv', account.pryv.user);
-              that.preMapPryv(gc, pc, function (err, pr) {
-                console.log('[INFO]', (new Date()).valueOf(), 'DONE: preMapPryv', account.pryv.user);
-                pc.preMapPryvResult = pr;
-                if (err) {
-                  done(err);
-                } else {
-                  var doEveryAccount = createFnAccount(that, gc, pc, done);
-                  process.nextTick(doEveryAccount);
-                }
-              });
-            },
-            // postMapPrv
-            function (done) {
-              console.log('[INFO]', (new Date()).valueOf(), 'START: postMapPryv');
-              that.postMapPryv(gc, pc, function () {
-                console.log('[INFO]', (new Date()).valueOf(), 'DONE: postMapGeneral');
-                done();
-              });
-            }
-          ], function () {
-            return done();
-          });
+          fns.push(createFnPryv(that, gc, pc));
+        }, function () {
+          async.parallel(fns, done);
         });
       });
     },
