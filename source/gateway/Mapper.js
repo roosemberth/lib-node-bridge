@@ -267,7 +267,7 @@ return function (done) {
         if (err) {
           stepDone(err);
         } else {
-          var doEveryAccount = createFnAccount(that, gc, pc, done);
+          var doEveryAccount = createFnAccount(that, gc, pc, stepDone);
           process.nextTick(doEveryAccount);
         }
       });
