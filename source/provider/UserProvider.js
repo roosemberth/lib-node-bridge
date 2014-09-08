@@ -468,7 +468,7 @@ UserProvider.prototype.forEachUser = function (fn, finalCb) {
           return finalCb();
         }
         for (var i = 0, l = docs.length; i < l; ++i) {
-          var item = docs;
+          var item = docs[i];
           var pryv = item.pryv;
           var service = item.service;
           for (var j = 0; j < service.accounts.length; ++j) {

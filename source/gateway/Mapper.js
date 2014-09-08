@@ -276,7 +276,7 @@ return function (done) {
     function (stepDone) {
       console.log('[INFO]', (new Date()).valueOf(), 'START: postMapPryv', pc.account.user);
       that.postMapPryv(gc, pc, function () {
-        console.log('[INFO]', (new Date()).valueOf(), 'DONE: postMapGeneral', pc.account.user);
+        console.log('[INFO]', (new Date()).valueOf(), 'DONE: postMapPryv', pc.account.user);
         stepDone();
       });
     }
@@ -315,7 +315,9 @@ Mapper.prototype.executeCron = function () {
           };
           fns.push(createFnPryv(that, gc, pc));
         }, function () {
-          async.parallel(fns, done);
+          async.parallel(fns, function () {
+            return done();
+          });
         });
       });
     },
