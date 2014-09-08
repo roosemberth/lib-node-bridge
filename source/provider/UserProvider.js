@@ -546,11 +546,11 @@ UserProvider.prototype.unlockAccount = function (username, serviceId, callback) 
         status: false,
         time: currentDate
       };
-      that.updateServiceAccount(username, account, function (error, account) {
+      that.updateServiceAccount(username, account, function (error, result) {
         if (!error) {
-          return callback(true, account);
+          return callback(true, result);
         } else {
-          return callback(false, account);
+          return callback(false, result);
         }
       });
     }

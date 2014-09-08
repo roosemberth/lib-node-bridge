@@ -134,12 +134,6 @@ AccountContainer.prototype.batchPartCreateEvents = function (events, callback) {
         }
       }
 
-      /*
-      console.log('ev.length', ev.length);
-      console.log('events.length', events.length);
-      console.log('notFound.length', notFound.length);
-*/
-
       if (notFound.length !== 0) {
         return this.connection.events.batchWithData(notFound, function (error, results) {
           // Manage all the errors
@@ -190,8 +184,8 @@ var setFailedStreams = function (map, pryvUser, serviceAccount, streams, error) 
         delete node.updateCurrent;
         node.error = error;
         node.error.id = utils.errorResolver(error);
-        console.log('[ERROR]', pryvUser, 'setting failed stream of array in',
-          node.uid, node.id, node.error.id);
+        //console.log('[ERROR]', pryvUser, 'setting failed stream of array in',
+        //  node.uid, node.id, node.error.id);
         if (node.error.id === 'auth-required' ||
           node.error.id === 'resource-inaccessible') {
           node.active = false;
@@ -201,8 +195,8 @@ var setFailedStreams = function (map, pryvUser, serviceAccount, streams, error) 
       delete node.updateCurrent;
       node.error = streams[node.id];
       node.error.id = utils.errorResolver(error);
-      console.log('[ERROR]', pryvUser, 'setting failed stream of map in',
-        node.uid, node.id, node.error.id);
+      //console.log('[ERROR]', pryvUser, 'setting failed stream of map in',
+      //  node.uid, node.id, node.error.id);
       if (node.error.id === 'auth-required' ||
         node.error.id === 'resource-inaccessible') {
         node.active = false;
