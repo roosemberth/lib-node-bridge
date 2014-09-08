@@ -158,6 +158,24 @@ var fnService = function (that, gc, pc, ac, callback) {
         }
       });
     },
+    // streamCreation
+    function (done) {
+      console.log('[INFO]', (new Date()).valueOf(), 'START: streamCreation',
+        pc.account.user, ac.serviceAccount.aid);
+      ac.createStreams(function (error) {
+        console.log('[INFO]', (new Date()).valueOf(), 'DONE: streamCreation',
+          pc.account.user, ac.serviceAccount.aid);
+        ac.streamFlattenMap();
+        ac.eventFlattenMap();
+
+        if (error) {
+          return done(error);
+        } else {
+          return done();
+        }
+
+      });
+    },
     // preMapService
     function (done) {
       console.log('[INFO]', (new Date()).valueOf(), 'START: preMapService',

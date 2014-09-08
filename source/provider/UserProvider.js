@@ -515,7 +515,7 @@ UserProvider.prototype.lockAccount = function (username, serviceId, callback) {
       if (account.lock) {
         if (account.lock.status) { // locked
           if (!account.lock.time || (currentDate - account.lock.time) > 3600000 ||
-            account.lock.time < (that.startTime- 900000)) {
+            account.lock.time < (that.startTime - 900000)) {
             account.lock.status = true;
             account.lock.time = currentDate;
           } else {
