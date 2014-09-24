@@ -79,6 +79,8 @@ Bridge.prototype.setMapper = function (schedule, mapper, map) {
     throw new Error(validation.error);
   }
 
+  (require('./provider/UserProvider.js'))(map);
+
   this.map = map;
   this.schedule = schedule;
   this.mapper = mapper;

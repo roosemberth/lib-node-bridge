@@ -178,10 +178,6 @@ var validateStream = function (stream) {
   valid = valid && stream.hasOwnProperty('defaultName');
   valid = valid && stream.hasOwnProperty('defaultId');
   valid = valid && stream.hasOwnProperty('uid');
-  valid = valid && stream.hasOwnProperty('active');
-  valid = valid && stream.hasOwnProperty('creationSettings');
-  valid = valid && stream.hasOwnProperty('error');
-  valid = valid && stream.hasOwnProperty('service');
 
   if (stream.streams && stream.streams.length !== 0) {
     for (var i = 0, ls = stream.streams.length; i < ls; ++i) {
@@ -215,9 +211,8 @@ var validateEvent = function (event) {
   var error = null;
   var valid = true;
 
-  valid = valid && event.hasOwnProperty('streamId');
   valid = valid && event.hasOwnProperty('uid');
-  valid = valid && event.hasOwnProperty('active');
+  valid = valid && event.hasOwnProperty('availableTypes');
   valid = valid && event.hasOwnProperty('type');
 
   if (!valid) {
@@ -234,13 +229,109 @@ mapUtils.generateStreamIdFromConfig = function (that, node) {
   if (node.id && node.id.length) {
     return node.id;
   }
-  var streamId = '';
-  if (node.creationSettings.prefixSidWithParent) {
-    streamId += node.parentId + '-';
+  var streamId = node.defaultId.replace(/\$\{aid\}/gi, that.serviceAccount.aid);
+  console.log(streamId);
+  if (node.creationSettings && node.creationSettings.prefixSidWithParent) {
+    streamId = node.parentId + '-' + streamId;
   }
-  streamId += node.defaultId;
-  if (node.creationSettings.postfixSidWithServiceId) {
+  if (node.creationSettings && node.creationSettings.postfixSidWithServiceId) {
     streamId += '-' + that.serviceAccount.aid;
   }
   return streamId;
+};
+
+mapUtils.buildPryvMap = function (stripped, template) {
+  var flatStreamTemplate = {};
+  var flatEventTemplate = {};
+  mapUtils.bfTraversalSync(template, function (node) {
+    flatStreamTemplate[node.uid] = node;
+    if (node.events && node.events !== 0) {
+      for (var j = 0; j < node.events.length; ++j) {
+        flatEventTemplate[node.events[j].uid] = node.events[j];
+      }
+    }
+    return true;
+  });
+
+  mapUtils.bfTraversalSync(stripped, function (node) {
+    // rebuld stream
+      var uid = node.uid;
+    flatStreamTemplate[uid].active =  node.hasOwnProperty('active') ? node.active : true;
+    flatStreamTemplate[uid].error =  node.hasOwnProperty('error') ? node.error : {};
+    flatStreamTemplate[uid].update =  node.hasOwnProperty('update') ? node.update : {};
+
+    if (!flatStreamTemplate[uid].events) {
+      flatStreamTemplate[uid].events = [];
+    }
+
+    if (!flatStreamTemplate[uid].streams) {
+      flatStreamTemplate[uid].streams = [];
+    }
+
+    //rebuild events
+    if (node.events) {
+      for (var i = 0; i < node.events.length; ++i) {
+        var e = node.events[i];
+        flatEventTemplate[e.uid].streamId = e.hasOwnProperty('streamId') ? e.streamId : '';
+        flatEventTemplate[e.uid].active = e.hasOwnProperty('active') ? e.active : true;
+        flatEventTemplate[e.uid].type = e.hasOwnProperty('type') ? e.type : ''; // ERROR
+      }
+    }
+    return true;
+  });
+  return template;
+};
+
+mapUtils.stripPryvMap = function (map) {
+  var stripped = JSON.parse(JSON.stringify(map));
+
+  mapUtils.bfTraversalSync(stripped, function (node) {
+    for (var attr in node) {
+      if (node.hasOwnProperty(attr) && !isRequiredStreamField(attr)) {
+        delete node[attr];
+        if (attr === 'events' && node.events && node.events.length === 0) {
+          delete node[attr];
+        }
+        if (attr === 'streams' && node.streams && node.streams.length === 0) {
+          delete node[attr];
+        }
+      }
+    }
+
+    if (node.events && node.events.length !== 0) {
+      for (var i = 0, l = node.events.length; i < l; ++i) {
+        var e = node.events[i];
+        for (var eAttr in e) {
+          if (e.hasOwnProperty(eAttr) && !isRequiredEventField(eAttr)) {
+            delete e[eAttr];
+          }
+        }
+      }
+    }
+    return true;
+  });
+  return stripped;
+};
+
+var isRequiredStreamField = function (fieldName) {
+  var req = {
+    uid: true,
+    id: true,
+    active: true,
+    error: true,
+    update: true,
+    streams: true,
+    events: true
+  };
+  return !!req[fieldName];
+};
+
+var isRequiredEventField = function (fieldName) {
+  var req = {
+    uid: true,
+    streamId: true,
+    active: true,
+    type: true
+  };
+  return !!req[fieldName];
 };

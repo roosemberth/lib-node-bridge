@@ -131,6 +131,7 @@ var nameIncrementalCreation = function (that, node, stream, done) {
       setChildrensParentId(node, stream.id);
       node.error = {};
       node.active = true;
+      node.id = stream.id;
       return done(true);
     });
   };

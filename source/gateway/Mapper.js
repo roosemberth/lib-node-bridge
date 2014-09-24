@@ -165,8 +165,6 @@ var fnService = function (that, gc, pc, ac, callback) {
       ac.createStreams(function (error) {
         console.log('[INFO]', (new Date()).valueOf(), 'DONE: streamCreation',
           pc.account.user, ac.serviceAccount.aid);
-        ac.streamFlattenMap();
-        ac.eventFlattenMap();
 
         if (error) {
           return done(error);

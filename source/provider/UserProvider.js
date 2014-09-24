@@ -1,8 +1,11 @@
 var mongo = require('mongodb');
 var config = require('../utils/config.js');
+var mapUtils = require('../utils/mapUtils.js');
 
 var Server = mongo.Server;
 var Db = mongo.Db;
+
+var pryvMapTemplate = [];
 
 var server = new Server(config.get('database:host'), config.get('database:port'), {
   auto_reconnect: true,
@@ -16,7 +19,10 @@ var dbClientInstance = null;
  * @returns {*} the instance
  * @constructor
  */
-var UserProvider = module.exports = function () {
+var UserProvider = module.exports = function (pryvMapTmpl) {
+  if (pryvMapTmpl) {
+    pryvMapTemplate = pryvMapTmpl;
+  }
   if (dbClientInstance) {
     return dbClientInstance;
   }
@@ -26,8 +32,8 @@ var UserProvider = module.exports = function () {
     userDb.open(function (err, db) {
       if (!err) {
         console.log('Connected to \"' + config.get('database:name') + '\" database');
-        db.collection(config.get('database:userCollection'), {strict: true}, function () {
-        });
+        db.collection(config.get('database:userCollection'), {strict: true},
+          function () {});
       }
     });
   } else {
@@ -277,6 +283,11 @@ UserProvider.prototype.getServiceAccounts = function (pryvUsername, callback) {
       if (error) {
         return callback(error, null);
       } else if (record && record.service) {
+        for (var i = 0; i < record.service.accounts.length; ++i) {
+          record.service.accounts[i].mapping =
+            mapUtils.buildPryvMap(record.service.accounts[i].mapping,
+            JSON.parse(JSON.stringify(pryvMapTemplate)));
+        }
         return callback(null, record.service.accounts);
       } else {
         return callback(null, []);
@@ -319,6 +330,7 @@ UserProvider.prototype.addServiceAccount = function (pryvUsername, account, call
           return callback('Service Account already exists', null);
         }
       }
+      account.mapping = mapUtils.stripPryvMap(account.mapping);
       service.accounts.push(account);
       that.setService(pryvUsername, service, function (err, service) {
         if (err) {
@@ -326,6 +338,9 @@ UserProvider.prototype.addServiceAccount = function (pryvUsername, account, call
         } else {
           for (var i = 0; i < service.accounts.length; ++i) {
             if (service.accounts[i].aid.toString() === account.aid.toString()) {
+              service.accounts[i].mapping =
+                mapUtils.buildPryvMap(service.accounts[i].mapping,
+                  JSON.parse(JSON.stringify(pryvMapTemplate)));
               return callback(null, service.accounts[i]);
             }
           }
@@ -354,6 +369,9 @@ UserProvider.prototype.updateServiceAccount = function (pryvUsername, account, c
         } else {
           for (var i = 0; i < service.accounts.length; ++i) {
             if (service.accounts[i].aid.toString() === account.aid.toString()) {
+              service.accounts[i].mapping =
+                mapUtils.buildPryvMap(service.accounts[i].mapping,
+                  JSON.parse(JSON.stringify(pryvMapTemplate)));
               return callback(null, service.accounts[i]);
             }
           }
@@ -362,6 +380,7 @@ UserProvider.prototype.updateServiceAccount = function (pryvUsername, account, c
       };
       for (var i = 0; i < service.accounts.length; ++i) {
         if (service.accounts[i].aid.toString() === account.aid.toString()) {
+          account.mapping = mapUtils.stripPryvMap(account.mapping);
           service.accounts[i] = account;
           return that.setService(pryvUsername, service, fn);
         }
@@ -515,14 +534,14 @@ UserProvider.prototype.lockAccount = function (username, serviceId, callback) {
       if (account.lock) {
         if (account.lock.status) { // locked
           if (!account.lock.time || (currentDate - account.lock.time) > 3600000 ||
-            account.lock.time < (that.startTime - 900000)) {
+            account.lock.time < (that.startTime - 900/*000*/)) {
             account.lock.status = true;
             account.lock.time = currentDate;
           } else {
             return callback(false, account);
           }
         } else {
-          if (currentDate - account.lock.time > 900000) {
+          if (currentDate - account.lock.time > 900/*000*/) {
             account.lock.status = true;
             account.lock.time = currentDate;
           } else {
@@ -567,3 +586,4 @@ UserProvider.prototype.unlockAccount = function (username, serviceId, callback) 
     }
   });
 };
+

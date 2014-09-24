@@ -41,6 +41,8 @@ AccountContainer.prototype.createStreams = function (cb) {
       mapUtils.bfTraversal(that.serviceAccount.mapping, function (node, callback) {
           createStream(that, node, callback);
       }, function () {
+        that.streamFlattenMap();
+        that.eventFlattenMap();
         db.updateServiceAccount(that.pryvAccount.user, that.serviceAccount, function () {
           cb();
         });
