@@ -182,7 +182,7 @@ AccountContainer.prototype.batchPartCreateEvents = function (events, callback) {
 var setFailedStreams = function (map, pryvUser, serviceAccount, streams, error) {
   mapUtils.bfTraversalSync(map, function (node) {
     if (streams instanceof Array) {
-      if (_.indexOf(streams, node.id) !== -1) {
+      if (_.indexOf(streams, node.id) !== -1 && node.active) {
         delete node.updateCurrent;
         node.error = error;
         node.error.id = utils.errorResolver(error);
@@ -193,7 +193,7 @@ var setFailedStreams = function (map, pryvUser, serviceAccount, streams, error) 
           node.active = false;
         }
       }
-    } else if (!!streams[node.id]) {
+    } else if (!!streams[node.id] && node.active) {
       delete node.updateCurrent;
       node.error = streams[node.id];
       node.error.id = utils.errorResolver(error);
