@@ -25,7 +25,7 @@ module.exports = function (that, node, callback) {
     parentStream = null;
   }
 
-  // Doest it exist?
+  // Does it exist?
   var changed = false;
   if (stream) {
     if (node.parentId && stream.parentId === null) {

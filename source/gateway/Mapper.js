@@ -141,13 +141,13 @@ var fnService = function (that, gc, pc, ac, callback) {
   async.series([
     // preStreamCreation
     function (done) {
-      console.log('[INFO]', (new Date()).valueOf(), 'START: preStreamCreation',
-        pc.account.user, ac.serviceAccount.aid);
+      //console.log('[INFO]', (new Date()).valueOf(), 'START: preStreamCreation',
+      //  pc.account.user, ac.serviceAccount.aid);
       ac.streamFlattenMap();
       ac.eventFlattenMap();
       that.preStreamCreation(gc, pc, ac, function (err, res) {
-        console.log('[INFO]', (new Date()).valueOf(), 'DONE: preStreamCreation',
-          pc.account.user, ac.serviceAccount.aid);
+        //console.log('[INFO]', (new Date()).valueOf(), 'DONE: preStreamCreation',
+        //  pc.account.user, ac.serviceAccount.aid);
         if (err) {
           return done(err);
         } else {
@@ -160,11 +160,11 @@ var fnService = function (that, gc, pc, ac, callback) {
     },
     // streamCreation
     function (done) {
-      console.log('[INFO]', (new Date()).valueOf(), 'START: streamCreation',
-        pc.account.user, ac.serviceAccount.aid);
+      //console.log('[INFO]', (new Date()).valueOf(), 'START: streamCreation',
+      //  pc.account.user, ac.serviceAccount.aid);
       ac.createStreams(function (error) {
-        console.log('[INFO]', (new Date()).valueOf(), 'DONE: streamCreation',
-          pc.account.user, ac.serviceAccount.aid);
+        //console.log('[INFO]', (new Date()).valueOf(), 'DONE: streamCreation',
+        //  pc.account.user, ac.serviceAccount.aid);
 
         if (error) {
           return done(error);
@@ -176,11 +176,11 @@ var fnService = function (that, gc, pc, ac, callback) {
     },
     // preMapService
     function (done) {
-      console.log('[INFO]', (new Date()).valueOf(), 'START: preMapService',
-        pc.account.user, ac.serviceAccount.aid);
+      //console.log('[INFO]', (new Date()).valueOf(), 'START: preMapService',
+      //  pc.account.user, ac.serviceAccount.aid);
       that.preMapService(gc, pc, ac, function (err, res) {
-        console.log('[INFO]', (new Date()).valueOf(), 'DONE: preMapService',
-          pc.account.user, ac.serviceAccount.aid);
+        //console.log('[INFO]', (new Date()).valueOf(), 'DONE: preMapService',
+        //  pc.account.user, ac.serviceAccount.aid);
         if (err) {
           return done(err);
         } else {
@@ -191,11 +191,11 @@ var fnService = function (that, gc, pc, ac, callback) {
     },
     // map
     function (done) {
-      console.log('[INFO]', (new Date()).valueOf(), 'START: map',
-        pc.account.user, ac.serviceAccount.aid);
+      //console.log('[INFO]', (new Date()).valueOf(), 'START: map',
+      //  pc.account.user, ac.serviceAccount.aid);
       that.map(gc, pc, ac, function (err, res) {
-        console.log('[INFO]', (new Date()).valueOf(), 'DONE: map',
-          pc.account.user, ac.serviceAccount.aid);
+        //console.log('[INFO]', (new Date()).valueOf(), 'DONE: map',
+        //  pc.account.user, ac.serviceAccount.aid);
         if (err) {
           return done(err);
         } else {
@@ -206,11 +206,11 @@ var fnService = function (that, gc, pc, ac, callback) {
     },
     // postMapService
     function (done) {
-      console.log('[INFO]', (new Date()).valueOf(), 'START: postMapService',
-        pc.account.user, ac.serviceAccount.aid);
+      //console.log('[INFO]', (new Date()).valueOf(), 'START: postMapService',
+      //  pc.account.user, ac.serviceAccount.aid);
       that.postMapService(gc, pc, ac, function (err, res) {
-        console.log('[INFO]', (new Date()).valueOf(), 'DONE: postMapService',
-          pc.account.user, ac.serviceAccount.aid);
+        //console.log('[INFO]', (new Date()).valueOf(), 'DONE: postMapService',
+        //  pc.account.user, ac.serviceAccount.aid);
         if (err) {
           return done(err);
         } else {
@@ -244,7 +244,7 @@ var createFnService = function (that, gc, pc, ac) {
             );
           });
         } else {
-          console.log('[INFO]', 'Could not acquire lock for', pc.account.user, ac.serviceAccount.aid);
+          //console.log('[INFO]', 'Could not acquire lock for', pc.account.user, ac.serviceAccount.aid);
           return done();
         }
       }
@@ -276,9 +276,9 @@ return function (done) {
   async.series([
     // preMapPryv
     function (stepDone) {
-      console.log('[INFO]', (new Date()).valueOf(), 'START: preMapPryv', pc.account.user);
+      //console.log('[INFO]', (new Date()).valueOf(), 'START: preMapPryv', pc.account.user);
       that.preMapPryv(gc, pc, function (err, pr) {
-        console.log('[INFO]', (new Date()).valueOf(), 'DONE: preMapPryv', pc.account.user);
+        //console.log('[INFO]', (new Date()).valueOf(), 'DONE: preMapPryv', pc.account.user);
         pc.preMapPryvResult = pr;
         if (err) {
           stepDone(err);
@@ -290,9 +290,9 @@ return function (done) {
     },
     // postMapPrv
     function (stepDone) {
-      console.log('[INFO]', (new Date()).valueOf(), 'START: postMapPryv', pc.account.user);
+      //console.log('[INFO]', (new Date()).valueOf(), 'START: postMapPryv', pc.account.user);
       that.postMapPryv(gc, pc, function () {
-        console.log('[INFO]', (new Date()).valueOf(), 'DONE: postMapPryv', pc.account.user);
+        //console.log('[INFO]', (new Date()).valueOf(), 'DONE: postMapPryv', pc.account.user);
         stepDone();
       });
     }
@@ -309,11 +309,14 @@ return function (done) {
 Mapper.prototype.executeCron = function () {
   var that = this;
   var gc = {};
+
+  console.log('[INFO]', (new Date()).valueOf(), 'CroneJob Start');
+
   async.series([
     function (done) {
-      console.log('[INFO]', (new Date()).valueOf(), 'START: preMapGeneral');
+      //console.log('[INFO]', (new Date()).valueOf(), 'START: preMapGeneral');
       that.preMapGeneral(gc, function (err, gr) {
-        console.log('[INFO]', (new Date()).valueOf(), 'DONE: preMapGeneral');
+        //console.log('[INFO]', (new Date()).valueOf(), 'DONE: preMapGeneral');
         gc.preMapGeneralResult = gr;
         if (err) {
           return done();
@@ -338,9 +341,9 @@ Mapper.prototype.executeCron = function () {
       });
     },
     function (done) {
-      console.log('[INFO]', (new Date()).valueOf(), 'START: postMapGeneral');
+      //console.log('[INFO]', (new Date()).valueOf(), 'START: postMapGeneral');
       that.postMapGeneral(gc, function () {
-        console.log('[INFO]', (new Date()).valueOf(), 'DONE: postMapGeneral');
+        //console.log('[INFO]', (new Date()).valueOf(), 'DONE: postMapGeneral');
         return done();
       });
     }
