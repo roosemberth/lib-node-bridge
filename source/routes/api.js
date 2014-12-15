@@ -14,7 +14,7 @@ var UserProvider = require('../provider/UserProvider.js');
 var up = new UserProvider();
 
 
-module.exports = function (mapper, reqPerm) {
+module.exports = function (mapper, reqPerm, callbacks) {
 
   router.get('/api/domain', function (req, res) {
     return res.send({
@@ -80,7 +80,13 @@ module.exports = function (mapper, reqPerm) {
               if (error) {
                 res.send(500);
               } else {
-                res.send(200);
+                up.getUser(username, function (error, user) {
+                  if (error) {
+                    return res.send(500);
+                  }
+                  callbacks.onLoginPryv(user);
+                  return res.send(200);
+                });
               }
             });
           }
@@ -89,6 +95,7 @@ module.exports = function (mapper, reqPerm) {
               if (error) {
                 res.send(500);
               } else {
+                callbacks.onLoginPryv(user);
                 res.send(200);
               }
             });

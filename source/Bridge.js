@@ -30,10 +30,13 @@ var Bridge = module.exports = function (appName, appId) {
   this.mapper = null;
   this.schedule = null;
   this.job = null;
+  this.apiCallbacks = {
+    onLoginPryv: function () { return null; }
+  };
 };
 
 Bridge.prototype.start = function () {
-  app.use('/', apiRoute(this.mapper, this.requestedPermissions));
+  app.use('/', apiRoute(this.mapper, this.requestedPermissions, this.apiCallbacks));
   server();
   setTimeout(function () {
     this.job.start();
@@ -63,6 +66,15 @@ Bridge.prototype.addServiceAuthRoutes = function (authRoutes) {
 
 Bridge.prototype.setRequestedPermissions = function (reqPerm) {
   this.requestedPermissions = reqPerm;
+};
+
+Bridge.prototype.on = function (event, callback) {
+  switch (event) {
+  case 'user:login:pryv':
+    this.apiCallbacks.onLoginPryv = callback;
+    break;
+  }
+
 };
 
 
