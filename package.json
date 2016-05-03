@@ -26,7 +26,7 @@
     "nconf": "0.6.9",
     "node-uuid": "1.4.1",
     "passport": "0.2.0",
-    "pryv": "git+ssh://git@github.com:pryv/lib-javascript.git#master",
+    "pryv": "git+https://github.com/pryv/lib-javascript.git#master",
     "request": "2.37.0",
     "underscore": "1.6.0",
     "winston": "0.7.3"
