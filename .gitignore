@@ -28,3 +28,4 @@ node_modules
 # Webstorm
 .idea
 sdk-bridge.iml
+lib-node-bridge.iml

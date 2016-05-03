@@ -1,6 +1,6 @@
 {
   "name": "pryv-sdk-bridge",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "contributors": [
     {
@@ -10,26 +10,30 @@
     {
       "name": "Jordane Pagand",
       "url": "http://github.com/jpagand"
+    },
+    {
+      "name": "Pierre-Mikael Legris",
+      "url": "http://github.com/perki"
     }
   ],
   "dependencies": {
-    "async": "0.9.0",
-    "body-parser": "1.5.2",
-    "connect-mongo": "0.4.1",
-    "cookie-parser": "1.3.2",
-    "cron": "1.0.4",
-    "express": "4.5.1",
-    "express-session": "1.6.5",
-    "method-override": "1.0.0",
-    "morgan": "1.1.1",
-    "mongodb": "1.4.7",
-    "nconf": "0.6.9",
-    "node-uuid": "1.4.1",
-    "passport": "0.2.0",
+    "async": "1.5.x",
+    "body-parser": "1.15.0",
+    "connect-mongo": "1.1.0",
+    "cookie-parser": "1.4.1",
+    "cron": "1.1.0",
+    "express": "4.13.4",
+    "express-session": "1.13.0",
+    "method-override": "2.3.5",
+    "morgan": "1.7.0",
+    "mongodb": "2.1.18",
+    "nconf": "0.8.4",
+    "node-uuid": "1.4.7",
+    "passport": "0.3.2",
     "pryv": "git+https://github.com/pryv/lib-javascript.git#master",
-    "request": "2.37.0",
-    "underscore": "1.6.0",
-    "winston": "0.7.3"
+    "request": "2.67.0",
+    "underscore": "1.8.3",
+    "winston": "2.2.0"
   },
   "devDependencies": {
     "mocha": "latest",
