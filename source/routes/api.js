@@ -63,8 +63,8 @@ module.exports = function (mapper, reqPerm, callbacks) {
    * Accepts an authorization from Pryv and register in DB
    */
   router.post('/login/pryv', function (req, res) {
-    var token = req.params.token;
-    var username = req.params.username;
+    var token = req.body.token;
+    var username = req.body.username;
 
     ip.verifyPryv(username, token, function (success) {
       if (success) {
