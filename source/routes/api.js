@@ -64,7 +64,7 @@ module.exports = function (mapper, reqPerm, callbacks) {
    */
   router.post('/login/pryv', function (req, res) {
     var token = req.params.token;
-    var username = req.param.username;
+    var username = req.params.username;
 
     ip.verifyPryv(username, token, function (success) {
       if (success) {
