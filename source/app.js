@@ -10,7 +10,7 @@ var bodyParser = require('body-parser'),
   path = require('path'),
   session = require('express-session'),
   uuid = require('node-uuid');
-var MongoStore = require('connect-mongo')(session);
+var MongoStore = require('connect-mongo/es5')(session);
 var app = module.exports = express();
 
 
@@ -18,20 +18,25 @@ var app = module.exports = express();
  * Configuration
  */
 // Session
+
+var mongoUrl =  'mongodb://' + config.get('database:host') + ':' +
+  config.get('database:port') + '/' + config.get('database:name');
+
+
 var sessionConfig = {
   store: new MongoStore({
-    url: 'mongodb://' + config.get('database:host') + ':' +
-      config.get('database:port') + '/' + config.get('database:name') +
-      '/' + config.get('database:pryvSessionCollection')
+    url: mongoUrl,
+    collection: config.get('database:pryvSessionCollection')
   }),
   secret: config.get('cookieSecret'),
-  genid: function() {
+  genid: function () {
     return uuid.v4(); // use UUIDs for session IDs
   },
   cookie: {
     maxAge: 30 * 24 * 60 * 60 * 1000
   }
 };
+
 
 // Cookie Parser
 app.use(cookieParser(config.get('cookieSecret')));
