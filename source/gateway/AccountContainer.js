@@ -19,7 +19,7 @@ var AccountContainer = module.exports = function (pryvAccount, serviceAccount, c
     this.connection = new Pryv.Connection({
       username: pryvAccount.user,
       auth: pryvAccount.token,
-      staging: utils.isStaging()
+      domain: utils.getPryvDomain()
     });
   }
 };

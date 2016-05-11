@@ -79,11 +79,12 @@ angular.module('pryvBridge.controllers', []).
         success(function (data, status, headers, config) {
           console.log('SigninPryvCtrl.success', data, status, headers, config);
           $rootScope.pryvDomain = data.pryvDomain;
-          $rootScope.pryvStaging = data.pryvStaging;
           $rootScope.appId = data.appId;
           $rootScope.requestedPermissions = data.permissions;
           settings.requestedPermissions = data.permissions;
-          loadAppData(data.appId, data.pryvStaging);
+          loadAppData(data.appId, data.pryvDomain);
+
+          pryv.Auth.config.registerURL = { host: 'reg.' + data.pryvDomain, 'ssl': true};
           if ($rootScope.pryvDomain === 'rec.la' ||
             $rootScope.pryvDomain === 'pryv.in') {
             pryv.Auth.config.registerURL = { host: 'reg.pryv.in', 'ssl': true};
@@ -104,13 +105,9 @@ angular.module('pryvBridge.controllers', []).
         });
 
 
-      var loadAppData = function (appId, staging) {
-        var url;
-        if (staging) {
-          url = 'https://reg.pryv.in/apps/';
-        } else {
-          url = 'https://reg.pryv.io/apps/';
-        }
+      var loadAppData = function (appId, domain) {
+        var url = 'https://reg.' + domain + '/apps/';
+
         $http({
           method: 'GET',
           url: url

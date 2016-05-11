@@ -2,23 +2,19 @@ var config = require('../utils/config.js');
 
 var utils = module.exports = {};
 
+var pryvDomain = config.get('pryvdomain');
+if (pryvDomain === 'rec.la') {
+  pryvDomain = 'pryv.in';
+}
+
 utils.getPryvDomain = function () {
-  if (config.get('pryvdomain') === 'pryv.in') {
-    return 'pryv.in';
-  } else if (config.get('pryvdomain') === 'rec.la') {
-    return 'pryv.in';
-  } else {
-    return 'pryv.io';
-  }
+  return pryvDomain;
 };
 
 utils.getPryvUrl = function (username) {
   return 'https://' + username + '.' + this.getPryvDomain() + '/';
 };
 
-utils.isStaging = function () {
-  return (config.get('pryvdomain') === 'pryv.in' || config.get('pryvdomain') === 'rec.la');
-};
 
 
 /**

@@ -329,7 +329,7 @@ Mapper.prototype.executeCron = function () {
             connection: new pryv.Connection({
               username: account.pryv.user,
               auth: account.pryv.token,
-              staging: utils.isStaging()
+              domain: utils.getPryvDomain()
             })
           };
           fns.push(createFnPryv(that, gc, pc));

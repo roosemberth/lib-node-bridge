@@ -49,7 +49,6 @@ nconf.defaults({
   },
   'cookieSecret': 'pryv',
   'pryvdomain': 'rec.la',
-  'pryvStaging': true,
   'http': {
     'port': 3000,
     'certsPathAndKey': __dirname + '/../cert/rec.la'

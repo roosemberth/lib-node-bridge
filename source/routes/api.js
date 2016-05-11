@@ -19,7 +19,6 @@ module.exports = function (mapper, reqPerm, callbacks) {
   router.get('/api/domain', function (req, res) {
     return res.send({
       pryvDomain: utils.getPryvDomain(),
-      pryvStaging: utils.isStaging(),
       appId: config.get('service:appId'),
       appName: config.get('service:appName'),
       permissions: reqPerm
@@ -64,8 +63,8 @@ module.exports = function (mapper, reqPerm, callbacks) {
    * Accepts an authorization from Pryv and register in DB
    */
   router.post('/login/pryv', function (req, res) {
-    var token = req.param('token');
-    var username = req.param('username');
+    var token = req.params.token;
+    var username = req.param.username;
 
     ip.verifyPryv(username, token, function (success) {
       if (success) {
