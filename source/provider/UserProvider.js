@@ -541,12 +541,9 @@ UserProvider.prototype.lockAccount = function (username, serviceId, callback) {
             return callback(false, account);
           }
         } else {
-          if (currentDate - account.lock.time > 900000) {
-            account.lock.status = true;
-            account.lock.time = currentDate;
-          } else {
-            return callback(false, account);
-          }
+          console.log("locking account: ", account);
+          account.lock.status = true;
+          account.lock.time = currentDate;
         }
       } else {
         account.lock = {
@@ -558,6 +555,12 @@ UserProvider.prototype.lockAccount = function (username, serviceId, callback) {
         if (!error) {
           return callback(true, result);
         } else {
+          // FIXME: Do proper error handling!
+          // Being here causes a resource leak, suppose a function calls lock account,
+          // for the time being, we locked the account, but if we return false at this
+          // point the account stays locked and the calling function will never unlock
+          // the account (it thinks it didn't get the lock);
+          throw new Error("We should not reach this point! Preventing resource leak");
           return callback(false, result);
         }
       });

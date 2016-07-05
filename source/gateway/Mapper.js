@@ -133,9 +133,19 @@ Mapper.prototype.postMapGeneral = function (generalContext, callback) {
   callback(null, null);
 };
 
+/**
+ * Called before scheduling the creation of the pryv structure for the account,
+ * right after the account container has been instanciated.
+ */
+Mapper.prototype.preCreateFnService = function (gc, pc, ac) {
+
+}
 
 /**
  * Helper function for executeCron
+ * @param generalContext   the result returned by preMapGeneral()
+ * @param pryvContext      the result returned by preMapGeneral()
+ * @param accountContainer the result returned by preMapGeneral()
  */
 var fnService = function (that, gc, pc, ac, callback) {
   async.series([
@@ -261,6 +271,8 @@ var createFnAccount = function (that, gc, pc, callback) {
     for (var i = 0; i < pc.service.accounts.length; ++i) {
       var sAcc = pc.service.accounts[i];
       var ac = new AccountContainer(pc.account, sAcc, pc.connection);
+      var preCreateFnServiceRes = preCreateFnService(gc, pc, ac);
+      gc.preCreateFnServiceResult = preCreateFnServiceRes;
       serviceFunctions.push(createFnService(that, gc, pc, ac));
     }
     async.parallel(serviceFunctions, function () {
@@ -329,7 +341,9 @@ Mapper.prototype.executeCron = function () {
             connection: new pryv.Connection({
               username: account.pryv.user,
               auth: account.pryv.token,
-              staging: utils.isStaging()
+              staging: utils.isStaging(),
+              // FIXME: Hardcoded domain!
+              domain: "domocare.io"
             })
           };
           fns.push(createFnPryv(that, gc, pc));
