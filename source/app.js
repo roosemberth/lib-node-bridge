@@ -13,6 +13,7 @@ var bodyParser = require('body-parser'),
 var MongoStore = require('connect-mongo')(session);
 var app = module.exports = express();
 
+app.disable('x-powered-by');
 
 /**
  * Configuration
@@ -37,8 +38,14 @@ var sessionConfig = {
 app.use(cookieParser(config.get('cookieSecret')));
 
 // Body Parser
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+requestMaxSize = config.get('request-limit');
+if (requestMaxSize){
+    app.use(bodyParser.urlencoded({limit: requestMaxSize, extended: true }));
+    app.use(bodyParser.json({limit: requestMaxSize}));
+} else {
+    app.use(bodyParser.urlencoded({ extended: false }));
+    app.use(bodyParser.json());
+}
 
 // Server
 app.set('port', config.get('http:port'));

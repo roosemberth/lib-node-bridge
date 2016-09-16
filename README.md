@@ -157,6 +157,7 @@ The must be at least one route to initiate the login procedure
       "cookie": {
         "secret": "my-cookie-secret"
       },
+      "request-limit":"5mb",
       "pryvdomain": "example.com",
       "pryvStaging": true,
       "http": {
@@ -165,6 +166,8 @@ The must be at least one route to initiate the login procedure
       },
       "refresh": "my-manual-refresh-password"
     }
+
+request-limit is the express' body parser request size limit. (Optional).
     
 
 ### Summary of the lib contents
